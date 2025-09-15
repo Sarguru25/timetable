@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:5
+    container_name: timetable_db
+    environment:
+      MONGO_INITDB_DATABASE: timetable
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/init.js:/docker-entrypoint-initdb.d/init.js:ro
+
+  node-server:
+    build: ./backend/node-server
+    container_name: timetable_node
+    ports:
+      - "5000:5000"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/timetable
+      JWT_SECRET: your_jwt_secret
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend/node-server:/app
+      - /app/node_modules
+
+  python-scheduler:
+    build: ./backend/python-scheduler
+    container_name: timetable_python
+    ports:
+      - "8000:8000"
+    depends_on:
+      - node-server
+
+  frontend:
+    build: ./frontend
+    container_name: timetable_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - node-server
+
+volumes:
+  mongodb_data:

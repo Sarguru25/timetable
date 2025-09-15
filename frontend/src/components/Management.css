@@ -1,0 +1,346 @@
+.management-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.management-form {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.management-list {
+  margin-top: 20px;
+}
+
+.management-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  background: white;
+}
+
+.item-info h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-email {
+  margin: 0 0 5px 0;
+  color: #666;
+}
+
+.item-meta {
+  margin: 0 0 5px 0;
+  color: #888;
+  font-size: 14px;
+}
+
+.item-details {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.item-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge.HOD {
+  background: #fff3e0;
+  color: #f57c00;
+}
+
+.badge.theory {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+.badge.lab {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.badge.mandatory {
+  background: #fce4ec;
+  color: #c2185b;
+}
+
+.subject-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.subject-row select,
+.subject-row input {
+  flex: 1;
+}
+
+.subject-list {
+  margin-top: 10px;
+}
+
+.subject-item {
+  padding: 5px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.subject-item:last-child {
+  border-bottom: none;
+}
+
+.item-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-primary {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-danger {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background-color: #5a6fd5;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e6ea;
+}
+
+.btn-danger:hover {
+  background-color: #c53030;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .management-item {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .item-actions {
+    align-self: flex-end;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .subject-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* Additional styles for Classes component */
+.subject-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px 40px;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.subject-list {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.subject-list h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.subject-item {
+  padding: 5px 0;
+  border-bottom: 1px solid #f9f9f9;
+  font-size: 14px;
+}
+
+.subject-item:last-child {
+  border-bottom: none;
+}
+
+.subject-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.teacher-name {
+  color: #666;
+}
+
+.hours {
+  color: #888;
+  font-size: 13px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px 0;
+  color: #666;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #888;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .subject-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  
+  .subject-row button {
+    justify-self: start;
+  }
+}
+
