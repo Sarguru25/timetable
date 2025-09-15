@@ -1,0 +1,252 @@
+.generate-schedule {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.schedule-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.schedule-header h2 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.schedule-header p {
+  color: #7f8c8d;
+  font-size: 16px;
+}
+
+.schedule-actions {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.generate-btn {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  min-width: 200px;
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.generate-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+.generate-btn.generating {
+  background: #95a5a6;
+}
+
+.action-buttons {
+  margin-top: 20px;
+}
+
+.download-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s;
+}
+
+.download-btn:hover {
+  background: #219653;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 4px solid #d32f2f;
+}
+
+.error-message h4 {
+  margin: 0 0 10px 0;
+}
+
+.error-hint {
+  font-size: 14px;
+  margin: 10px 0 0 0;
+  font-style: italic;
+}
+
+.result-container {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #4caf50;
+}
+
+.success-message h4 {
+  margin: 0 0 8px 0;
+}
+
+.statistics {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.statistics p {
+  margin: 5px 0;
+}
+
+.timetables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.class-timetable {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.class-title {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.timetable-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.timetable-table th,
+.timetable-table td {
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+
+.period-header {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  width: 60px;
+}
+
+.day-header {
+  background-color: #e3f2fd;
+  font-weight: 600;
+}
+
+.period-cell {
+  background-color: #f8f9fa;
+  font-weight: 500;
+}
+
+.schedule-slot {
+  min-width: 120px;
+  height: 60px;
+  vertical-align: middle;
+}
+
+.schedule-cell {
+  padding: 4px;
+}
+
+.subject-name {
+  font-weight: 500;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.teacher-name {
+  font-size: 11px;
+  color: #666;
+  font-style: italic;
+}
+
+.info-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.info-section h4 {
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+}
+
+.info-section ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.info-section li {
+  margin-bottom: 8px;
+  color: #555;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .timetable-table {
+    font-size: 12px;
+  }
+  
+  .timetable-table th,
+  .timetable-table td {
+    padding: 6px;
+  }
+  
+  .schedule-slot {
+    min-width: 80px;
+    height: 50px;
+  }
+  
+  .subject-name {
+    font-size: 10px;
+  }
+  
+  .teacher-name {
+    font-size: 9px;
+  }
+}
