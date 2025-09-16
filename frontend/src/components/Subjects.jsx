@@ -14,47 +14,72 @@ const Subjects = () => {
     hoursPerWeek: 2,
     mandatory: true,
   });
-
+  const [file, setFile] = useState(null); // for excel file
+  
   useEffect(() => {
     fetchSubjects();
   }, []);
+  
+  const fetchSubjects = async () => {
+    try {
+      const response = await api.get("/subjects");
+      console.log("📡 Subjects API response:", response.data);
 
-const fetchSubjects = async () => {
-  try {
-    const response = await api.get("/subjects");
-    console.log("📡 Subjects API response:", response.data);
+      // If backend returns { subjects: [...] }
+      if (Array.isArray(response.data)) {
+        setSubjects(response.data);
+      } else if (Array.isArray(response.data.subjects)) {
+        setSubjects(response.data.subjects);
+      } else {
+        setSubjects([]);
+      }
 
-    // If backend returns { subjects: [...] }
-    if (Array.isArray(response.data)) {
-      setSubjects(response.data);
-    } else if (Array.isArray(response.data.subjects)) {
-      setSubjects(response.data.subjects);
-    } else {
-      setSubjects([]); 
+      setLoading(false);
+    } catch (error) {
+      console.error("❌ Error fetching subjects:", error);
+      setLoading(false);
     }
+  };
 
-    setLoading(false);  
-  } catch (error) {
-    console.error("❌ Error fetching subjects:", error);
-    setLoading(false);   
-  }
-};
+  // for excel file osfong
+  // const [file, setFile] = useState(null);
 
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
-    if (editingSubject) {
-      await api.put(`/subjects/${editingSubject._id}`, formData);
-    } else {
-      await api.post("/subjects", formData);
+  const handleFileUpload = async () => {
+    if (!file) return alert("Please select a file");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await api.post("/subjects/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      console.log(res.data);
+      alert("Subjects uploaded successfully");
+      fetchSubjects(); // refresh subjects
+    } catch (error) {
+      console.error(error);
+      alert("Error uploading subjects");
     }
-    resetForm();
-    fetchSubjects();
-  } catch (error) {
-    console.error("Error saving subject:", error);
-  }
-};
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingSubject) {
+        await api.put(`/subjects/${editingSubject._id}`, formData);
+      } else {
+        await api.post("/subjects", formData);
+      }
+      resetForm();
+      fetchSubjects();
+    } catch (error) {
+      console.error("Error saving subject:", error);
+    }
+  };
   const handleEdit = (subject) => {
     setEditingSubject(subject);
     setFormData({
@@ -153,6 +178,17 @@ const fetchSubjects = async () => {
               />
               Mandatory Subject
             </label>
+          </div>
+
+          <div className="excel-upload">
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              onChange={handleFileChange}
+            />
+            <button className="btn-primary" onClick={handleFileUpload}>
+              Upload Excel
+            </button>
           </div>
 
           <div className="form-actions">

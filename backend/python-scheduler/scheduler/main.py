@@ -2,54 +2,69 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import logging
 import os
+import random
 
 # ----------------------------
-# Mock Timetable Scheduler Class
+# Timetable Scheduler Class
 # ----------------------------
 class TimetableScheduler:
     def __init__(self, data):
         self.data = data
+        self.days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+        self.max_periods = 6  # periods per day
 
     def generate_schedule(self):
         """
-        Generate a simple distributed schedule across days and periods.
+        Generate a structured timetable avoiding teacher clashes.
         """
         result = []
-
-        # Define working days and periods
-        days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "saturday"]
-        max_periods = 6  # periods per day
-        total_days = len(days)
+        teacher_allocations = {}  # track teacher usage per day/period
 
         for c in self.data.get("classes", []):
-            period_counter = 0  # count across all slots
+            class_schedule = []
+            available_slots = [(d, p) for d in self.days for p in range(1, self.max_periods + 1)]
+            random.shuffle(available_slots)  # shuffle to distribute randomly
 
             for subj in c.get("subjects", []):
-                hours = subj.get("hoursPerWeek", 1)  # how many times this subject should appear
+                hours = subj.get("hoursPerWeek", 1)
 
                 for _ in range(hours):
-                    # Compute day + period
-                    day_index = (period_counter // max_periods) % total_days
-                    period = (period_counter % max_periods) + 1
+                    if not available_slots:
+                        continue
 
-                    result.append({
+                    # Pick next slot
+                    day, period = available_slots.pop()
+
+                    # Prevent teacher conflict
+                    teacher_id = subj["teacherId"]
+                    if teacher_id not in teacher_allocations:
+                        teacher_allocations[teacher_id] = set()
+
+                    while (day, period) in teacher_allocations[teacher_id] and available_slots:
+                        day, period = available_slots.pop()
+
+                    teacher_allocations[teacher_id].add((day, period))
+
+                    # Add to timetable
+                    class_schedule.append({
                         "classId": c["id"],
-                        "day": days[day_index],
+                        "day": day,
                         "period": period,
                         "subjectId": subj["subjectId"],
-                        "teacherId": subj["teacherId"]
+                        "teacherId": teacher_id
                     })
 
-                    period_counter += 1  # move forward
+            # Sort by day and period for readability
+            class_schedule.sort(key=lambda x: (self.days.index(x["day"]), x["period"]))
+            result.extend(class_schedule)
 
         return result
 
-
     def optimize_existing(self, timetable):
         """
-        Example optimization (mock).
-        You can implement real optimization here.
+        Placeholder optimization: shuffle timetable to reduce conflicts.
         """
+        random.shuffle(timetable)
         return timetable
 
 
@@ -68,22 +83,11 @@ CORS(app)  # Allow all origins
 # ----------------------------
 @app.route('/health', methods=['GET'])
 def health_check():
-    """Health check endpoint"""
     return jsonify({"status": "healthy", "service": "timetable-scheduler"})
 
 
 @app.route('/schedule', methods=['POST'])
 def generate_schedule():
-    """
-    Generate timetable schedule
-    Expected JSON payload:
-    {
-        "classes": [...],
-        "teachers": [...],
-        "subjects": [...],
-        "fixedSlots": [...]
-    }
-    """
     try:
         data = request.get_json()
         if not data:
@@ -91,13 +95,11 @@ def generate_schedule():
 
         logger.info("Received schedule generation request")
 
-        # Validate required fields
         required_fields = ['classes', 'teachers', 'subjects']
         for field in required_fields:
             if field not in data:
                 return jsonify({"error": f"Missing required field: {field}"}), 400
 
-        # Generate schedule
         scheduler = TimetableScheduler(data)
         result = scheduler.generate_schedule()
 
@@ -111,9 +113,6 @@ def generate_schedule():
 
 @app.route('/validate', methods=['POST'])
 def validate_schedule():
-    """
-    Validate an existing timetable for conflicts
-    """
     try:
         data = request.get_json()
         if not data or 'timetable' not in data:
@@ -134,9 +133,6 @@ def validate_schedule():
 
 @app.route('/optimize', methods=['POST'])
 def optimize_schedule():
-    """
-    Optimize an existing timetable
-    """
     try:
         data = request.get_json()
         if not data or 'timetable' not in data:
@@ -156,18 +152,29 @@ def optimize_schedule():
 
 
 # ----------------------------
-# Helper Functions
+# Helper
 # ----------------------------
 def validate_timetable(timetable):
-    """
-    Validate timetable for conflicts (mock)
-    Example checks could include:
-    - Teacher double bookings
-    - Class conflicts
-    - Constraint violations
-    """
     conflicts = []
-    # Example mock: No actual conflict detection yet
+    teacher_usage = {}
+
+    for entry in timetable:
+        key = (entry["day"], entry["period"])
+        teacher_id = entry["teacherId"]
+
+        if teacher_id not in teacher_usage:
+            teacher_usage[teacher_id] = set()
+
+        if key in teacher_usage[teacher_id]:
+            conflicts.append({
+                "teacherId": teacher_id,
+                "day": entry["day"],
+                "period": entry["period"],
+                "conflict": "Teacher double-booked"
+            })
+        else:
+            teacher_usage[teacher_id].add(key)
+
     return conflicts
 
 
