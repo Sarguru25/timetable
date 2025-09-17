@@ -156,7 +156,7 @@ const Dashboard = ({ setActiveView, user }) => {
         </div>
       </div>
 
-      <div className="recent-activity">
+      {/* <div className="recent-activity">
         <h3>Recent Activity</h3>
         <ul>
           <li>
@@ -181,7 +181,7 @@ const Dashboard = ({ setActiveView, user }) => {
             </div>
           </li>
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 };

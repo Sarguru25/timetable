@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Management.css";
 import api from "../services/api";
+import * as XLSX from "xlsx";
 
 const Classes = () => {
   const [classes, setClasses] = useState([]);
@@ -16,6 +17,7 @@ const Classes = () => {
     studentCount: 30,
     subjects: [],
   });
+  const [excelFile, setExcelFile] = useState(null);
 
   useEffect(() => {
     fetchClasses();
@@ -52,6 +54,37 @@ const Classes = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    setExcelFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const token = localStorage.getItem("token"); // get JWT stored at login
+      const res = await axios.post(
+        "http://localhost:5000/api/classes/bulk-upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${token}`, // 🔑 add token here
+          },
+        }
+      );
+
+      console.log("Upload success:", res.data);
+      alert("Bulk upload successful!");
+    } catch (err) {
+      console.error("Bulk upload error:", err);
+      alert("Upload failed: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -73,22 +106,22 @@ const Classes = () => {
     }
   };
 
-const handleEdit = (classItem) => {
-  setEditingClass(classItem);
+  const handleEdit = (classItem) => {
+    setEditingClass(classItem);
 
-  setFormData({
-    name: classItem.name,
-    semester: classItem.semester,
-    studentCount: classItem.studentCount,
-    subjects: classItem.subjects.map(s => ({
-      subject: s.subject?._id || s.subject,  
-      teacher: s.teacher?._id || s.teacher,  
-      hoursPerWeek: s.hoursPerWeek
-    }))     
-  });
+    setFormData({
+      name: classItem.name,
+      semester: classItem.semester,
+      studentCount: classItem.studentCount,
+      subjects: classItem.subjects.map((s) => ({
+        subject: s.subject?._id || s.subject,
+        teacher: s.teacher?._id || s.teacher,
+        hoursPerWeek: s.hoursPerWeek,
+      })),
+    });
 
-  setShowForm(true);
-};
+    setShowForm(true);
+  };
 
   const handleDelete = async (classId) => {
     if (window.confirm("Are you sure you want to delete this class?")) {
@@ -276,6 +309,17 @@ const handleEdit = (classItem) => {
                 </button>
               </div>
             ))}
+
+            <div>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+              />
+              <button onClick={handleUpload} className="btn-primary">
+                Upload Excel
+              </button>
+            </div>
 
             <button
               type="button"

@@ -59,12 +59,18 @@ router.post('/generate', auth, async (req, res) => {
       }))
     };
 
+    console.log("Sending payload to Python:", scheduleData);
+
     // Call Python service
     const response = await axios.post('http://localhost:8000/schedule', scheduleData);
-    const schedule = response.data;
+    const { timetable, status, message } = response.data;
 
-    // Save into DB
-    for (const cell of schedule) {
+    if (status !== "success") {
+      return res.status(400).json({ message: message || "Failed to generate schedule" });
+    }
+
+    // Save timetable into DB
+    for (const cell of timetable) {
       await TimetableCell.findOneAndUpdate(
         { class: cell.classId, day: cell.day, period: cell.period },
         {
@@ -76,7 +82,15 @@ router.post('/generate', auth, async (req, res) => {
       );
     }
 
-    res.json({ message: 'Schedule generated successfully', schedule });
+    // Send consistent response
+    res.json({
+      status: "success",
+      message: "Schedule generated successfully",
+      timetable
+    });
+
+    console.log("Generated timetable:", timetable);
+
   } catch (error) {
     console.error('Schedule generation error:', error);
     res.status(500).json({ message: error.message });
