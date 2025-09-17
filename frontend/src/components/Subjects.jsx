@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import "./Management.css";
 import api from "../services/api";
+import "./Management.css";
 
 const Subjects = () => {
   const [subjects, setSubjects] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
@@ -12,28 +12,20 @@ const Subjects = () => {
     name: "",
     type: "theory",
     hoursPerWeek: 2,
-    mandatory: true,
+    classId: "",
   });
-  const [file, setFile] = useState(null); // for excel file
-  
+  const [file, setFile] = useState(null);
+
   useEffect(() => {
     fetchSubjects();
+    fetchClasses();
   }, []);
-  
+
+  // 🔹 Fetch subjects
   const fetchSubjects = async () => {
     try {
       const response = await api.get("/subjects");
-      console.log("📡 Subjects API response:", response.data);
-
-      // If backend returns { subjects: [...] }
-      if (Array.isArray(response.data)) {
-        setSubjects(response.data);
-      } else if (Array.isArray(response.data.subjects)) {
-        setSubjects(response.data.subjects);
-      } else {
-        setSubjects([]);
-      }
-
+      setSubjects(Array.isArray(response.data) ? response.data : []);
       setLoading(false);
     } catch (error) {
       console.error("❌ Error fetching subjects:", error);
@@ -41,76 +33,88 @@ const Subjects = () => {
     }
   };
 
-  // for excel file osfong
-  // const [file, setFile] = useState(null);
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleFileUpload = async () => {
-    if (!file) return alert("Please select a file");
-    const formData = new FormData();
-    formData.append("file", file);
-
+  // 🔹 Fetch classes
+  const fetchClasses = async () => {
     try {
-      const res = await api.post("/subjects/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      console.log(res.data);
-      alert("Subjects uploaded successfully");
-      fetchSubjects(); // refresh subjects
-    } catch (error) {
-      console.error(error);
-      alert("Error uploading subjects");
+      const res = await api.get("/classes");
+      setClasses(res.data || []);
+    } catch (err) {
+      console.error("❌ Error fetching classes:", err);
     }
   };
 
+  // 🔹 Handle Excel file input
+  const handleFileChange = (e) => setFile(e.target.files[0]);
+
+  // 🔹 Upload subjects via Excel
+  const handleFileUpload = async () => {
+    if (!file) return alert("Please select a file");
+    const uploadData = new FormData();
+    uploadData.append("file", file);
+
+    try {
+      await api.post("/subjects/upload", uploadData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      alert("✅ Subjects uploaded successfully");
+      fetchSubjects();
+    } catch (error) {
+      console.error("❌ Error uploading subjects:", error);
+      alert("❌ Error uploading subjects: " + (error.response?.data?.message || ""));
+    }
+  };
+
+  // 🔹 Add / Update subject manually
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (editingSubject) {
         await api.put(`/subjects/${editingSubject._id}`, formData);
+        alert("✅ Subject updated successfully");
       } else {
         await api.post("/subjects", formData);
+        alert("✅ Subject added successfully");
       }
       resetForm();
       fetchSubjects();
     } catch (error) {
-      console.error("Error saving subject:", error);
+      console.error("❌ Error saving subject:", error);
+      alert("❌ Error saving subject: " + (error.response?.data?.message || ""));
     }
   };
+
+  // 🔹 Edit subject
   const handleEdit = (subject) => {
     setEditingSubject(subject);
     setFormData({
       name: subject.name,
       type: subject.type,
       hoursPerWeek: subject.hoursPerWeek,
-      mandatory: subject.mandatory,
+      classId: subject.classId?._id || "",
     });
     setShowForm(true);
   };
 
+  // 🔹 Delete subject
   const handleDelete = async (subjectId) => {
     if (window.confirm("Are you sure you want to delete this subject?")) {
       try {
         await api.delete(`/subjects/${subjectId}`);
+        alert("✅ Subject deleted successfully");
         fetchSubjects();
       } catch (error) {
-        console.error("Error deleting subject:", error);
+        console.error("❌ Error deleting subject:", error);
+        alert("❌ Error deleting subject: " + (error.response?.data?.message || ""));
       }
     }
   };
 
+  // 🔹 Reset form
   const resetForm = () => {
-    setFormData({
-      name: "",
-      type: "theory",
-      hoursPerWeek: 2,
-      mandatory: true,
-    });
+    setFormData({ name: "", type: "theory", hoursPerWeek: 2, classId: "" });
     setEditingSubject(null);
     setShowForm(false);
+    setFile(null);
   };
 
   if (loading) return <div className="loading">Loading subjects...</div>;
@@ -118,12 +122,13 @@ const Subjects = () => {
   return (
     <div className="management-container">
       <div className="management-header">
-        <h2>Manage Subjects</h2>
+        <h2>📚 Manage Subjects</h2>
         <button className="btn-primary" onClick={() => setShowForm(!showForm)}>
-          {showForm ? "Cancel" : "Add New Subject"}
+          {showForm ? "Cancel" : "➕ Add New Subject"}
         </button>
       </div>
 
+      {/* 🔹 Form for Manual Add / Edit + Excel Upload */}
       {showForm && (
         <form className="management-form" onSubmit={handleSubmit}>
           <div className="form-group">
@@ -131,9 +136,7 @@ const Subjects = () => {
             <input
               type="text"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
             />
           </div>
@@ -142,9 +145,7 @@ const Subjects = () => {
             <label>Subject Type</label>
             <select
               value={formData.type}
-              onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
             >
               <option value="theory">Theory</option>
               <option value="lab">Lab</option>
@@ -156,37 +157,33 @@ const Subjects = () => {
             <input
               type="number"
               value={formData.hoursPerWeek}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  hoursPerWeek: parseInt(e.target.value),
-                })
-              }
+              onChange={(e) => setFormData({ ...formData, hoursPerWeek: parseInt(e.target.value) })}
               min="1"
               max="10"
             />
           </div>
 
           <div className="form-group">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={formData.mandatory}
-                onChange={(e) =>
-                  setFormData({ ...formData, mandatory: e.target.checked })
-                }
-              />
-              Mandatory Subject
-            </label>
+            <label>Class *</label>
+            <select
+              value={formData.classId}
+              onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
+              required
+            >
+              <option value="">Select Class</option>
+              {classes.map((cls) => (
+                <option key={cls._id} value={cls._id}>
+                  {cls.name} (Semester {cls.semester})
+                </option>
+              ))}
+            </select>
           </div>
 
+          {/* Excel Upload Option */}
           <div className="excel-upload">
-            <input
-              type="file"
-              accept=".xlsx, .xls"
-              onChange={handleFileChange}
-            />
-            <button className="btn-primary" onClick={handleFileUpload}>
+            <label>Upload via Excel</label>
+            <input type="file" accept=".xlsx, .xls" onChange={handleFileChange} />
+            <button type="button" className="btn-primary" onClick={handleFileUpload}>
               Upload Excel
             </button>
           </div>
@@ -202,6 +199,7 @@ const Subjects = () => {
         </form>
       )}
 
+      {/* 🔹 List of Subjects */}
       <div className="management-list">
         {subjects.length === 0 ? (
           <div className="empty-state">
@@ -214,28 +212,18 @@ const Subjects = () => {
               <div className="item-info">
                 <h3>{subject.name}</h3>
                 <div className="item-details">
-                  <span className={`badge ${subject.type}`}>
-                    {subject.type}
-                  </span>
+                  <span className={`badge ${subject.type}`}>{subject.type}</span>
+                  <span className="item-meta">{subject.hoursPerWeek} hrs/week</span>
                   <span className="item-meta">
-                    {subject.hoursPerWeek} hours/week
+                    Class: {subject.classId?.name || "N/A"}
                   </span>
-                  {subject.mandatory && (
-                    <span className="badge mandatory">Mandatory</span>
-                  )}
                 </div>
               </div>
               <div className="item-actions">
-                <button
-                  className="btn-secondary"
-                  onClick={() => handleEdit(subject)}
-                >
+                <button className="btn-secondary" onClick={() => handleEdit(subject)}>
                   Edit
                 </button>
-                <button
-                  className="btn-danger"
-                  onClick={() => handleDelete(subject._id)}
-                >
+                <button className="btn-danger" onClick={() => handleDelete(subject._id)}>
                   Delete
                 </button>
               </div>

@@ -1,28 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const SubjectSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+    trim: true,
   },
   hoursPerWeek: {
     type: Number,
-    required: true
+    required: true,
   },
   type: {
     type: String,
-    enum: ['theory', 'lab'],
-    default: 'theory'
+    enum: ["theory", "lab"],
+    default: "theory",
   },
-  mandatory: {
-    type: Boolean,
-    default: true
+  classId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Class",
+    required: true,
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Subject', SubjectSchema);
+module.exports = mongoose.model("Subject", SubjectSchema);

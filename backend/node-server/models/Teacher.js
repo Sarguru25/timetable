@@ -13,6 +13,11 @@ const TeacherSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  position: {
+    type: String,
+    enum: ['HOD', 'Professor', 'Associate Professor', 'Assistant Professor'],
+    required: true
+  },
   subjectsCanTeach: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Subject'
@@ -25,21 +30,11 @@ const TeacherSchema = new mongoose.Schema({
     day: Number,
     period: Number
   }],
-  maxHoursPerDay: {
-    type: Number,
-    default: 4,
-    min: 1,
-    max: 8
-  },
-  maxHoursPerWeek: {
+  maxPeriodsPerWeek: {
     type: Number,
     default: 20,
     min: 1,
     max: 40
-  },
-  isHOD: {
-    type: Boolean,
-    default: false
   },
   createdAt: {
     type: Date,
