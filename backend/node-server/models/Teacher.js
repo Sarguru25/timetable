@@ -1,45 +1,56 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const TeacherSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
+const TeacherSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    tCode: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    department: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
+    },
+    role: {
+      type: String,
+      enum: ["Assistant Professor", "Associate Professor", "Professor","HOD"],
+      default: "Faculty",
+    },
+    contact: {
+      type: String,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    unavailableSlots: [
+      {
+        day: { type: Number, min: 1, max: 7 },
+        period: { type: Number, min: 1 },
+      },
+    ],
+    preferredSlots: [
+      {
+        day: { type: Number, min: 1, max: 7 },
+        period: { type: Number, min: 1 },
+      },
+    ],
   },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  position: {
-    type: String,
-    enum: ['HOD', 'Professor', 'Associate Professor', 'Assistant Professor'],
-    required: true
-  },
-  subjectsCanTeach: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Subject'
-  }],
-  unavailableSlots: [{
-    day: Number,
-    period: Number
-  }],
-  preferredSlots: [{
-    day: Number,
-    period: Number
-  }],
-  maxPeriodsPerWeek: {
-    type: Number,
-    default: 20,
-    min: 1,
-    max: 40
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Teacher', TeacherSchema);
+module.exports = mongoose.model("Teacher", TeacherSchema);

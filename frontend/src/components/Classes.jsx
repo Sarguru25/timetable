@@ -240,8 +240,8 @@ const Classes = () => {
       <div className="management-header">
         <h2>Manage Classes</h2>
         <div>
-          <button className="btn-primary" onClick={() => { setShowForm(!showForm); if (!showForm) resetForm(); }}>
-            {showForm ? "Close" : "Add / Edit Class"}
+          <button className="btn-primary" onClick={() => { setShowForm(!showForm)}}>
+            {showForm ? "Close" : "Add Class"}
           </button>
         </div>
       </div>

@@ -6,6 +6,13 @@ const SubjectSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  sCode: {
+    type: String,
+    required: true,
+    unique: true,
+    uppercase: true,
+    trim: true,
+  },
   hoursPerWeek: {
     type: Number,
     required: true,
@@ -18,6 +25,11 @@ const SubjectSchema = new mongoose.Schema({
   classId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Class",
+    required: true,
+  },
+  teacherId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Teacher",
     required: true,
   },
   createdAt: {

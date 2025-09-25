@@ -1,28 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
+import "./Navigation.css";
 
-const Navigation = ({
-  activeView,
-  setActiveView,
-  selectedClass,
-  setSelectedClass,
-  selectedTeacher,
-  setSelectedTeacher,
-  user,
-}) => {
-  const classes = [
-    { id: "1", name: "Class 10A" },
-    { id: "2", name: "Class 10B" },
-    { id: "3", name: "Class 11A" },
-    { id: "4", name: "Class 11B" },
-  ];
+const Navigation = ({ activeView, setActiveView, user }) => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const teachers = [
-    { id: "1", name: "Dr. Smith" },
-    { id: "2", name: "Prof. Johnson" },
-    { id: "3", name: "Ms. Williams" },
-    { id: "4", name: "Mr. Brown" },
-  ];
+  // Toggle sidebar open/close
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const closeSidebar = () => setSidebarOpen(false);
 
+  // Handle navigation link click
+  const handleNavClick = (view) => {
+    setActiveView(view);
+    closeSidebar();
+  };
+
+  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -30,120 +23,177 @@ const Navigation = ({
   };
 
   return (
-    <nav className="navigation">
-      <div className="nav-header">
-        <h1>Timetable System</h1>
-        <div className="user-info">
-          Logged in as: {user?.name} ({user?.role})
+    <div className="layout">
+      {/* Top Navigation Bar */}
+      <header className="top-navbar">
+        <div className="top-nav-left">
+          {/* Hamburger button (mobile view) */}
+          <button className="hamburger" onClick={toggleSidebar}>
+            ☰
+          </button>
+          <h1 className="logo">Timetable System</h1>
         </div>
-      </div>
 
-      <ul className="nav-menu">
-        {/* Add these to your navigation menu */}
-        <li className="nav-item">
+        <div className="top-nav-right">
           <button
-            className={`nav-link ${activeView === "teachers" ? "active" : ""}`}
-            onClick={() => setActiveView("teachers")}
+            className="top-nav"
+            // style={{
+              // backgroundColor: "#1f2937",
+            //   color: "white",
+            //   border: "none",
+            //   cursor: "pointer",
+            //   padding: "8px 12px",
+            //   borderRadius: "4px",
+            //   marginRight: "10px",
+            // }}
+            onClick={() => handleNavClick("dashboard")}
           >
-            Manage Teachers
+            Home
           </button>
-        </li>
-        <li className="nav-item">
           <button
-            className={`nav-link ${activeView === "classes" ? "active" : ""}`}
-            onClick={() => setActiveView("classes")}
+            // style={{
+            //   backgroundColor: "#1f2937",
+            //   color: "white",
+            //   border: "none",
+            //   cursor: "pointer",
+            //   padding: "8px 12px",
+            //   borderRadius: "4px",
+            //   marginRight: "10px",
+            // }}
+            className="top-nav"
+            onClick={() => handleNavClick("departments")}
           >
-            Manage Classes
+            Departments
           </button>
-        </li>
-        <li className="nav-item">
           <button
-            className={`nav-link ${activeView === "subjects" ? "active" : ""}`}
-            onClick={() => setActiveView("subjects")}
-          >
-            Manage Subjects
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeView === "dashboard" ? "active" : ""}`}
-            onClick={() => setActiveView("dashboard")}
-          >
-            Dashboard
-          </button>
-        </li>
-        <li className="nav-item">
-          <div className="form-group">
-            <label>Select Class:</label>
-            <select
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value)}
-            >
-              <option value="">View All Classes</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </li>
-        <li className="nav-item">
-          <div className="form-group">
-            <label>Select Teacher:</label>
-            <select
-              value={selectedTeacher}
-              onChange={(e) => setSelectedTeacher(e.target.value)}
-            >
-              <option value="">View All Teachers</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeView === "timetable" ? "active" : ""}`}
-            onClick={() => setActiveView("timetable")}
-            disabled={!selectedClass && !selectedTeacher}
+            // style={{
+            //   backgroundColor: "#1f2937",
+            //   color: "white",
+            //   border: "none",
+            //   cursor: "pointer",
+            //   padding: "8px 12px",
+            //   borderRadius: "4px",
+            //   marginRight: "10px",
+            // }}
+            className="top-nav"
+            onClick={() => handleNavClick("timetable")}
           >
             View Timetable
           </button>
-        </li>
-        {user?.role === "teacher" && (
-          <li className="nav-item">
+          <span className="user-info">
+            {user?.name} ({user?.role})
+          </span>
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </header>
+
+      {/* Sidebar Navigation */}
+      <aside id="sidebar" className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        {/* Close Button */}
+        <button className="close-btn" onClick={closeSidebar}>
+          ✕
+        </button>
+
+        <nav className="sidebar-menu">
+          <button
+            className={`nav-link ${activeView === "dashboard" ? "active" : ""}`}
+            onClick={() => handleNavClick("dashboard")}
+          >
+            Home
+          </button>
+
+          <button
+            className={`nav-link ${activeView === "teachers" ? "active" : ""}`}
+            onClick={() => handleNavClick("teachers")}
+          >
+            Manage Teachers
+          </button>
+
+          <button
+            className={`nav-link ${activeView === "classes" ? "active" : ""}`}
+            onClick={() => handleNavClick("classes")}
+          >
+            Manage Classes
+          </button>
+
+          <button
+            className={`nav-link ${activeView === "subjects" ? "active" : ""}`}
+            onClick={() => handleNavClick("subjects")}
+          >
+            Manage Subjects
+          </button>
+
+          <button
+            className={`nav-link ${
+              activeView === "departments" ? "active" : ""
+            }`}
+            onClick={() => handleNavClick("departments")}
+          >
+            Departments
+          </button>
+
+          <button
+            className={`nav-link ${activeView === "timetable" ? "active" : ""}`}
+            onClick={() => handleNavClick("timetable")}
+            // disabled={!selectedClass && !selectedTeacher}
+          >
+            View Timetable
+          </button>
+
+          {user?.role === "teacher" && (
             <button
               className={`nav-link ${activeView === "manual" ? "active" : ""}`}
-              onClick={() => setActiveView("manual")}
+              onClick={() => handleNavClick("manual")}
             >
               Manual Scheduling
             </button>
-          </li>
-        )}
-        {user?.role === "admin" && (
-          <li className="nav-item">
+          )}
+
+          {user?.role === "admin" && (
             <button
               className={`nav-link ${
                 activeView === "generate" ? "active" : ""
               }`}
-              onClick={() => setActiveView("generate")}
+              onClick={() => handleNavClick("generate")}
             >
               Generate Schedule
             </button>
-          </li>
-        )}
-      </ul>
+          )}
+        </nav>
+        <div className="nav-footer">
+          <button className="new-member-btn" onClick={handleLogout}>
+            {" "}
+            Add new member{" "}
+          </button>
+          <button className="logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </aside>
 
-      <div className="nav-footer">
-        <button className="logout-btn" onClick={handleLogout}>
-          Logout
-        </button>
-      </div>
-    </nav>
+      {/* Overlay (when sidebar is open on mobile) */}
+      {sidebarOpen && <div className="overlay" onClick={closeSidebar}></div>}
+
+      {/* Main Content Area */}
+      {/* <main className="main-content"> */}
+        {/* Content for each view will be rendered here */}
+      {/* </main> */}
+      
+    </div>
   );
+};
+
+Navigation.propTypes = {
+  activeView: PropTypes.string.isRequired,
+  setActiveView: PropTypes.func.isRequired,
+  selectedClass: PropTypes.any,
+  selectedTeacher: PropTypes.any,
+  user: PropTypes.shape({
+    name: PropTypes.string,
+    role: PropTypes.string,
+  }),
 };
 
 export default Navigation;

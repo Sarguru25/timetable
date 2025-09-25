@@ -1,3 +1,4 @@
+/* ====== Container & Layout ====== */
 .management-container {
   padding: 20px;
   max-width: 1200px;
@@ -13,6 +14,7 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
+/* ====== Forms ====== */
 .management-form {
   background: #f9f9f9;
   padding: 20px;
@@ -22,15 +24,6 @@
 
 .form-group {
   margin-bottom: 15px;
-}
-
-.form-row {
-  display: flex;
-  gap: 15px;
-}
-
-.form-row .form-group {
-  flex: 1;
 }
 
 .form-group label {
@@ -49,6 +42,15 @@
   font-size: 16px;
 }
 
+.form-row {
+  display: flex;
+  gap: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
 .checkbox-group {
   display: flex;
   flex-wrap: wrap;
@@ -59,13 +61,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: normal;
   cursor: pointer;
+  font-weight: normal;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: auto;
   margin: 0;
+  width: auto;
 }
 
 .form-actions {
@@ -74,8 +76,10 @@
   margin-top: 20px;
 }
 
+/* ====== Lists & Items ====== */
 .management-list {
   margin-top: 20px;
+  width: 500px;
 }
 
 .management-item {
@@ -83,29 +87,29 @@
   justify-content: space-between;
   align-items: flex-start;
   padding: 15px;
+  margin-bottom: 10px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  margin-bottom: 10px;
-  background: white;
+  background: #fff;
 }
 
 .item-info h3 {
-  margin: 0 0 5px 0;
-  color: #333;
+  margin: 0 0 5px;
   display: flex;
   align-items: center;
   gap: 10px;
+  color: #333;
 }
 
 .item-email {
-  margin: 0 0 5px 0;
+  margin: 0 0 5px;
   color: #666;
 }
 
 .item-meta {
-  margin: 0 0 5px 0;
-  color: #888;
+  margin: 0 0 5px;
   font-size: 14px;
+  color: #888;
 }
 
 .item-details {
@@ -130,6 +134,12 @@
   font-size: 12px;
 }
 
+.item-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* ====== Badges ====== */
 .badge {
   padding: 2px 8px;
   border-radius: 4px;
@@ -157,8 +167,10 @@
   color: #c2185b;
 }
 
+/* ====== Subjects Section ====== */
 .subject-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px 40px;
   gap: 10px;
   margin-bottom: 10px;
   align-items: center;
@@ -171,121 +183,12 @@
 
 .subject-list {
   margin-top: 10px;
-}
-
-.subject-item {
-  padding: 5px 0;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.subject-item:last-child {
-  border-bottom: none;
-}
-
-.item-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.btn-primary {
-  background-color: #667eea;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-secondary {
-  background-color: #f8f9fa;
-  color: #333;
-  border: 1px solid #ddd;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-danger {
-  background-color: #e53e3e;
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.btn-primary:hover {
-  background-color: #5a6fd5;
-}
-
-.btn-secondary:hover {
-  background-color: #e2e6ea;
-}
-
-.btn-danger:hover {
-  background-color: #c53030;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-}
-
-.empty-state h3 {
-  margin: 0 0 10px 0;
-  color: #333;
-}
-
-.loading {
-  text-align: center;
-  padding: 40px;
-  font-size: 18px;
-  color: #666;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .management-item {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .item-actions {
-    align-self: flex-end;
-  }
-  
-  .form-row {
-    flex-direction: column;
-    gap: 0;
-  }
-  
-  .subject-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
-/* Additional styles for Classes component */
-.subject-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 80px 40px;
-  gap: 10px;
-  margin-bottom: 10px;
-  align-items: center;
-}
-
-.subject-list {
-  margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid #f0f0f0;
 }
 
 .subject-list h4 {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 14px;
   color: #666;
 }
@@ -310,20 +213,65 @@
 }
 
 .hours {
-  color: #888;
   font-size: 13px;
+  color: #888;
 }
 
+/* ====== Buttons ====== */
+.btn-primary {
+  background-color: #667eea;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-secondary {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-danger {
+  background-color: #e53e3e;
+  color: #fff;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-primary:hover {
+  background-color: #5a6fd5;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e6ea;
+}
+
+.btn-danger:hover {
+  background-color: #c53030;
+}
+
+/* ====== Empty & Loading States ====== */
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  background: #f9f9f9;
   border-radius: 8px;
+  background: #f9f9f9;
   border: 1px dashed #ddd;
+  color: #666;
 }
 
 .empty-state h3 {
-  margin: 0 0 10px 0;
+  margin: 0 0 10px;
   color: #666;
 }
 
@@ -332,15 +280,35 @@
   color: #888;
 }
 
-/* Responsive adjustments */
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* ====== Responsive Design ====== */
 @media (max-width: 768px) {
+  .management-item {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .item-actions {
+    align-self: flex-end;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
   .subject-row {
     grid-template-columns: 1fr;
     gap: 5px;
   }
-  
+
   .subject-row button {
     justify-self: start;
   }
 }
-

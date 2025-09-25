@@ -10,6 +10,7 @@ import Classes from "./components/Classes.jsx";
 import Subjects from "./components/Subjects.jsx";
 import FirstLogin from "./components/FirstLogin.jsx";
 import ScheduleGenerator from "./components/ScheduleGenerator.jsx";
+import Department from "./components/Department.jsx";
 import "./App.css";
 
 function App() {
@@ -46,6 +47,8 @@ function App() {
         return <Classes />;
       case "subjects":
         return <Subjects />;
+      case "department":
+        return <Department />;
       case "manual":
         return <ManualScheduler teacherId={user.teacherId || user.id} />;
       case "generate":

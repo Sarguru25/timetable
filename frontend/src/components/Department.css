@@ -1,0 +1,226 @@
+/* Global Styles */
+.department-container {
+  height: 100vh;
+  padding: 16px;
+  background-color: #f5f5f5;
+  font-family: 'Arial, sans-serif';
+}
+
+.panel-wrapper {
+  display: flex;
+  height: 100%;
+  gap: 16px;
+}
+
+/* Left Panel: Department List */
+.left-panel {
+  flex: 1;
+  max-width: 400px;
+  height: 100%;
+}
+
+.panel-header {
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.panel-header h3 {
+  color: #1976d2;
+  margin: 0 0 16px 0;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.department-list {
+  flex: 1;
+  overflow-y: auto;
+  background-color: white;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0 16px 16px;
+  height: 85%;
+}
+
+.department-card {
+  margin-bottom: 8px;
+  padding: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: box-shadow 0.3s, transform 0.3s, background-color 0.3s;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.department-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.department-card.selected {
+  background-color: #e3f2fd;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+}
+
+.department-card h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.no-results {
+  text-align: center;
+  color: #666;
+  margin: 20px 0;
+}
+
+/* Right Panel: Department Details */
+.right-panel {
+  flex: 3;
+  height: 100%;
+}
+
+.details-panel,
+.placeholder-panel {
+  height: 100%;
+  padding: 16px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.placeholder-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-panel h3 {
+  color: #999;
+  margin: 0;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.details-header h2 {
+  color: #1976d2;
+  margin: 0;
+  font-weight: bold;
+}
+
+.export-btn {
+  padding: 8px 16px;
+  border: 1px solid #1976d2;
+  background-color: white;
+  color: #1976d2;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.export-btn:hover {
+  background-color: #1976d2;
+  color: white;
+}
+
+/* Staff List Section (replaces year cards) */
+.staff-card {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.staff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.staff-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.staff-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+/* Staff Table */
+.staff-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.staff-table th {
+  background-color: #1976d2;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+
+.staff-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+.staff-table tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Loading */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+/* Responsive: Mobile (stack panels vertically) */
+@media (max-width: 768px) {
+  .panel-wrapper {
+    flex-direction: column;
+  }
+
+  .left-panel {
+    max-width: none;
+    margin-bottom: 16px;
+  }
+
+  .details-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .staff-header {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+}
