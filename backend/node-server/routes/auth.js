@@ -1,98 +1,163 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User.js');
-const Teacher = require('../models/Teacher.js');
-const auth = require('../middleware/auth');
+const User = require('../models/User');
+const Teacher = require('../models/Teacher');
+const Student = require('../models/Student');
+const { auth, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Allowed roles
-const ALLOWED_ROLES = ['teacher', 'admin', 'student'];
-
-// Utility: generate JWT
+// Generate JWT token
 const generateToken = (user) => {
   return jwt.sign(
     {
       userId: user._id,
       role: user.role,
-      teacherId: user.teacherId || null,
+      teacherId: user.teacherId,
+      studentId: user.studentId,
+      department: user.department
     },
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
   );
 };
 
-// ================== SIGNUP ==================
-router.post('/signup', async (req, res) => {
+// Test endpoint to check if auth is working
+router.get('/test', (req, res) => {
+  res.json({ message: 'Auth route is working!' });
+});
+
+// Test signup without auth for debugging
+router.post('/test-signup', async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { email, password, role, department, name } = req.body;
 
-    // Basic validations
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: 'Name, email, password and role are required' });
+    console.log('Received signup data:', req.body);
+
+    // Simple validation
+    if (!email || !password || !role || !department || !name) {
+      return res.status(400).json({
+        message: 'All fields are required',
+        received: req.body
+      });
     }
-    if (!ALLOWED_ROLES.includes(role)) {
-      return res.status(400).json({ message: 'Invalid role specified' });
+
+    res.json({
+      success: true,
+      message: 'Test signup successful (no user created)',
+      data: req.body
+    });
+  } catch (error) {
+    console.error('Test signup error:', error);
+    res.status(500).json({
+      message: 'Test signup failed',
+      error: error.message
+    });
+  }
+});
+
+// ================== ADMIN-ONLY USER CREATION ==================
+router.post('/signup', auth, requireAdmin, async (req, res) => {
+  try {
+    const { email, password, role, department, name } = req.body;
+
+    // Validation
+    if (!email || !password || !role || !department) {
+      return res.status(400).json({
+        message: 'Email, password, role, and department are required'
+      });
     }
+
     if (password.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+      return res.status(400).json({
+        message: 'Password must be at least 6 characters'
+      });
     }
 
-    // Check existing user
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists with this email' });
+      return res.status(400).json({
+        message: 'User already exists with this email'
+      });
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Create Teacher profile if role is teacher
     let teacherId = null;
-    if (role === 'teacher') {
-      const teacher = await new Teacher({
+    let studentId = null;
+
+    // Create teacher profile for faculty roles
+    if (['hod', 'assistant_professor', 'associate_professor', 'professor'].includes(role)) {
+      // Generate unique teacher code
+      const lastTeacher = await Teacher.findOne().sort({ createdAt: -1 });
+      let nextNumber = 1;
+
+      if (lastTeacher && lastTeacher.tCode) {
+        const lastNum = parseInt(lastTeacher.tCode.replace("T-", "")) || 0;
+        nextNumber = lastNum + 1;
+      }
+
+      const teacher = new Teacher({
         name,
         email,
-        subjectsCanTeach: [],
-        unavailableSlots: [],
-        preferredSlots: [],
-        maxHoursPerDay: 4,
-        maxHoursPerWeek: 20,
-        isHOD: false,
-      }).save();
+        department,
+        role:
+          role === "hod"
+            ? "HOD"
+            : role === "assistant_professor"
+              ? "Assistant Professor"
+              : role === "associate_professor"
+                ? "Associate Professor"
+                : "Professor",
+        tCode: `T-${String(nextNumber).padStart(3, "0")}`, // e.g. T-001, T-002
+      });
 
+      await teacher.save();
       teacherId = teacher._id;
     }
 
-    // Create User
-    const user = await new User({
-      name,
+
+    // Create student profile for student role
+    if (role === 'student') {
+      const student = new Student({
+        name,
+        email,
+        department
+      });
+      await student.save();
+      studentId = student._id;
+    }
+
+    // Create user
+    const user = new User({
       email,
-      password: hashedPassword,
+      password,
       role,
+      department,
       teacherId,
-      firstLogin: true,
-    }).save();
+      studentId
+    });
 
-    // Generate JWT
-    const token = generateToken(user);
+    await user.save();
 
-    // Response
     res.status(201).json({
-      token,
+      message: 'User created successfully',
       user: {
         id: user._id,
         email: user.email,
-        name: user.name,
         role: user.role,
+        department: user.department,
         teacherId: user.teacherId,
-        firstLogin: user.firstLogin,
-      },
+        studentId: user.studentId
+      }
     });
+
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({ message: 'Server error during registration' });
+    console.error('Signup error details:', error.stack);
+    res.status(500).json({
+      message: 'Server error during user creation',
+      error: error.message
+    });
   }
 });
 
@@ -102,67 +167,133 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+      return res.status(400).json({
+        message: 'Email and password are required'
+      });
     }
 
-    // Find user
-    const user = await User.findOne({ email }).populate('teacherId');
+    // Find user and populate relevant data
+    const user = await User.findOne({ email, isActive: true })
+      .populate('teacherId')
+      .populate('studentId');
+
     if (!user) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({
+        message: 'Invalid credentials or account inactive'
+      });
     }
 
     // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ message: 'Invalid credentials' });
+      return res.status(401).json({
+        message: 'Invalid credentials'
+      });
     }
 
-    // Generate JWT
-    const token = generateToken({
-      _id: user._id,
-      role: user.role,
-      teacherId: user.teacherId ? user.teacherId._id : null,
-    });
+    // Generate token
+    const token = generateToken(user);
 
-    // Response
+    // Prepare user data for response
+    let userData = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      department: user.department
+    };
+
+    // Add name based on role
+    if (user.teacherId) {
+      userData.name = user.teacherId.name;
+      userData.teacherId = user.teacherId._id;
+    } else if (user.studentId) {
+      userData.name = user.studentId.name;
+      userData.studentId = user.studentId._id;
+    } else {
+      userData.name = 'Administrator';
+    }
+
     res.json({
       token,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.teacherId ? user.teacherId.name : user.name || 'Administrator',
-        role: user.role,
-        teacherId: user.teacherId ? user.teacherId._id : null,
-        firstLogin: user.firstLogin,
-      },
+      user: userData,
+      message: 'Login successful'
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error during authentication' });
+    res.status(500).json({
+      message: 'Server error during authentication'
+    });
   }
 });
 
-
-// Get current user
+// ================== GET CURRENT USER ==================
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password').populate('teacherId');
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const user = await User.findById(req.user.userId)
+      .select('-password')
+      .populate('teacherId')
+      .populate('studentId');
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    let userData = {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      department: user.department
+    };
+
+    if (user.teacherId) {
+      userData.name = user.teacherId.name;
+      userData.teacherId = user.teacherId._id;
+    } else if (user.studentId) {
+      userData.name = user.studentId.name;
+      userData.studentId = user.studentId._id;
+    } else {
+      userData.name = 'Administrator';
+    }
 
     res.json({
       success: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        teacherId: user.teacherId ? user.teacherId._id : null,
-        firstLogin: user.firstLogin
-      }
+      user: userData
     });
   } catch (error) {
     console.error("Fetch current user error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({
+      message: "Server error"
+    });
+  }
+});
+
+// ================== GET USERS (Admin only) ==================
+router.get('/users', auth, requireAdmin, async (req, res) => {
+  try {
+    const users = await User.find()
+      .select('-password')
+      .populate('teacherId')
+      .populate('studentId');
+
+    res.json({
+      success: true,
+      users: users.map(user => ({
+        id: user._id,
+        email: user.email,
+        role: user.role,
+        department: user.department,
+        name: user.teacherId?.name || user.studentId?.name || 'Administrator',
+        isActive: user.isActive,
+        createdAt: user.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error("Get users error:", error);
+    res.status(500).json({
+      message: "Server error fetching users"
+    });
   }
 });
 

@@ -1,3 +1,4 @@
+/* ScheduleGenerator.css */
 .generate-schedule {
   padding: 20px;
   max-width: 1200px;
@@ -12,7 +13,6 @@
 .schedule-header h2 {
   color: #2c3e50;
   margin-bottom: 10px;
-  font-size: 28px;
 }
 
 .schedule-header p {
@@ -26,21 +26,18 @@
 }
 
 .generate-btn {
-  background: linear-gradient(135deg, #3498db, #2980b9);
+  background: #3498db;
   color: white;
   border: none;
-  padding: 15px 30px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: 6px;
   font-size: 16px;
-  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  min-width: 200px;
+  transition: background 0.3s ease;
 }
 
 .generate-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+  background: #2980b9;
 }
 
 .generate-btn:disabled {
@@ -49,88 +46,229 @@
 }
 
 .generate-btn.generating {
+  background: #f39c12;
+}
+
+.selection-info {
+  margin-top: 15px;
+  padding: 10px;
+  background: #ecf0f1;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.change-selection-btn {
   background: #95a5a6;
-}
-
-.action-buttons {
-  margin-top: 20px;
-}
-
-.download-btn {
-  background: #27ae60;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 6px;
+  padding: 5px 10px;
+  border-radius: 3px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 12px;
 }
 
-.download-btn:hover {
-  background: #219653;
+.change-selection-btn:hover {
+  background: #7f8c8d;
 }
 
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 10px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.loading {
+  text-align: center;
+  font-size: 18px;
+  color: #3498db;
 }
 
 .error-message {
-  background-color: #ffebee;
-  color: #d32f2f;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  border-left: 4px solid #d32f2f;
+  background: #e74c3c;
+  color: white;
+  padding: 15px;
+  border-radius: 6px;
+  margin: 20px 0;
 }
 
 .error-message h4 {
   margin: 0 0 10px 0;
 }
 
-.error-hint {
-  font-size: 14px;
-  margin: 10px 0 0 0;
-  font-style: italic;
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.result-container {
-  background-color: #f8f9fa;
+.modal-content {
+  background: white;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #7f8c8d;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+}
+
+.class-selection {
+  padding: 20px;
+}
+
+.selection-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.select-all-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.select-all-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.selected-count {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.classes-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.class-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.class-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.class-checkbox:hover {
+  background: #f8f9fa;
+}
+
+.class-checkbox input {
+  width: 16px;
+  height: 16px;
+}
+
+.class-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.class-name {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.class-details {
+  font-size: 12px;
+  color: #7f8c8d;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #ecf0f1;
+}
+
+.btn-cancel {
+  background: #95a5a6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancel:hover {
+  background: #7f8c8d;
+}
+
+.btn-generate {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-generate:hover:not(:disabled) {
+  background: #219a52;
+}
+
+.btn-generate:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+}
+
+/* Result Styles */
+.result-container {
+  margin-top: 30px;
 }
 
 .success-message {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background: #d4edda;
+  color: #155724;
   padding: 15px;
   border-radius: 6px;
   margin-bottom: 20px;
-  border-left: 4px solid #4caf50;
 }
 
 .success-message h4 {
-  margin: 0 0 8px 0;
-}
-
-.statistics {
-  margin-top: 10px;
-  font-size: 14px;
-}
-
-.statistics p {
-  margin: 5px 0;
+  margin: 0 0 10px 0;
 }
 
 .timetables-container {
@@ -140,113 +278,137 @@
 }
 
 .class-timetable {
-  background: white;
-  padding: 20px;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  background: white;
 }
 
 .class-title {
   color: #2c3e50;
-  margin: 0 0 15px 0;
-  font-size: 18px;
-  font-weight: 600;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #3498db;
 }
 
 .timetable-table {
   width: 100%;
   border-collapse: collapse;
-  background: white;
+  margin-top: 10px;
 }
 
 .timetable-table th,
 .timetable-table td {
+  border: 1px solid #ddd;
   padding: 12px;
   text-align: center;
-  border: 1px solid #e0e0e0;
 }
 
-.period-header {
+.timetable-table th {
+  background-color: #2ca29e;
+  color: white;
+  font-weight: bold;
+}
+
+.timetable-table td {
   background-color: #f8f9fa;
-  font-weight: 600;
-  width: 60px;
-}
-
-.day-header {
-  background-color: #e3f2fd;
-  font-weight: 600;
-}
-
-.period-cell {
-  background-color: #f8f9fa;
-  font-weight: 500;
-}
-
-.schedule-slot {
   min-width: 120px;
-  height: 60px;
-  vertical-align: middle;
+  height: 80px;
+  vertical-align: top;
 }
 
 .schedule-cell {
-  padding: 4px;
+  padding: 5px;
 }
 
 .subject-name {
-  font-weight: 500;
-  font-size: 12px;
-  margin-bottom: 2px;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 5px;
 }
 
 .teacher-name {
-  font-size: 11px;
-  color: #666;
+  font-size: 12px;
+  color: #7f8c8d;
   font-style: italic;
-}
-
-.info-section {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.info-section h4 {
-  color: #2c3e50;
-  margin: 0 0 15px 0;
-}
-
-.info-section ul {
-  margin: 0;
-  padding-left: 20px;
-}
-
-.info-section li {
-  margin-bottom: 8px;
-  color: #555;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .generate-schedule {
+    padding: 10px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+  
   .timetable-table {
     font-size: 12px;
   }
   
   .timetable-table th,
   .timetable-table td {
-    padding: 6px;
+    padding: 8px 4px;
   }
   
-  .schedule-slot {
-    min-width: 80px;
-    height: 50px;
-  }
-  
-  .subject-name {
-    font-size: 10px;
-  }
-  
-  .teacher-name {
-    font-size: 9px;
+  .selection-actions {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
   }
 }
+
+.class-selection {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.class-selection h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.classes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.class-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.class-checkbox input[type="checkbox"] {
+  margin: 0;
+}
+
+.selected-info {
+  font-style: italic;
+  color: #666;
+  margin: 0;
+}
+
+.generate-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  color: #c33;
+  padding: 10px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+

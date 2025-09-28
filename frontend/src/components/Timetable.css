@@ -1,0 +1,134 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.timetable-wrapper {
+  max-width: 1000px;
+  margin: 20px auto;
+  padding: 10px;
+}
+
+.class-select {
+  margin-bottom: 20px;
+  padding: 8px;
+  font-size: 1rem;
+}
+
+.timetable-grid-wrapper {
+  overflow-x: auto;
+}
+
+.timetable-grid {
+  display: grid;
+  grid-template-columns: 80px repeat(6, 1fr);
+  border: 1px solid #ccc;
+  min-width: 600px;
+}
+
+.grid-header, .grid-row {
+  display: contents;
+}
+
+.grid-cell {
+  border: 1px solid #ccc;
+  padding: 15px 10px;
+  text-align: center;
+  min-height: 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  word-wrap: break-word;
+  font-weight: 500;
+}
+
+.header-cell {
+  background-color: #2ca29e;
+  color: #ffffff;
+  font-weight: bold;
+}
+
+.period-cell {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+.slot-cell {
+  background-color: #fff;
+  transition: background 0.2s;
+}
+
+.slot-cell.editable:hover {
+  background-color: #e0f7ff;
+  cursor: pointer;
+}
+
+.slot-locked {
+  color: red;
+  font-size: 0.8rem;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  width: 320px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.modal-content input {
+  width: 100%;
+  margin: 8px 0;
+  padding: 6px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.save-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #ccc;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 700px) {
+  .timetable-grid {
+    grid-template-columns: 60px repeat(6, minmax(100px, 1fr));
+  }
+  .grid-cell {
+    padding: 8px 5px;
+    min-height: 50px;
+  }
+}
+
+.download-btn{
+    position: absolute;
+    right: 16%;
+}

@@ -11,16 +11,18 @@ const auth = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.userId).select('-password');
-    if (!user) {
-      return res.status(401).json({ message: 'User not found or token invalid' });
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: 'User not found or account inactive' });
     }
 
-    // Attach both decoded token info + actual user
+    // Attach user info to request
     req.user = {
-      ...decoded,
-      role: user.role,
+      userId: user._id,
       email: user.email,
+      role: user.role,
       teacherId: user.teacherId,
+      studentId: user.studentId,
+      department: user.department
     };
 
     next();
@@ -35,4 +37,38 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = auth;
+// Role-based access control middleware
+const requireRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: 'Access denied. Insufficient permissions.',
+        requiredRoles: allowedRoles,
+        userRole: req.user.role
+      });
+    }
+
+    next();
+  };
+};
+
+// Specific role middlewares
+const requireAdmin = requireRole(['admin']);
+const requireHOD = requireRole(['hod']);
+const requireFaculty = requireRole(['assistant_professor', 'associate_professor', 'professor']);
+const requireStudent = requireRole(['student']);
+const requireFacultyOrStudent = requireRole(['assistant_professor', 'associate_professor', 'professor', 'student']);
+
+module.exports = {
+  auth,
+  requireRole,
+  requireAdmin,
+  requireHOD,
+  requireFaculty,
+  requireStudent,
+  requireFacultyOrStudent
+};

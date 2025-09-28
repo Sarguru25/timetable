@@ -1,138 +1,116 @@
 const express = require('express');
-const TimetableCell = require('../models/TimetableCell.js');
-const auth = require('../middleware/auth.js');
-
+const { auth, requireAdmin, requireHOD } = require('../middleware/auth');
+const TimetableCell = require('../models/TimetableCell');
+const Class = require('../models/Class');
 const router = express.Router();
+const mongoose = require("mongoose");
 
-// Get timetable for a class
+// Get all available classes that have timetables
+router.get('/classes', auth, async (req, res) => {
+  try {
+    const classes = await TimetableCell.find({})
+      .populate('class', 'name department')
+      .distinct('class');
+
+    const classDetails = await Class.find({
+      _id: { $in: classes }
+    }).select('name department');
+
+    res.json({
+      success: true,
+      classes: classDetails
+    });
+  } catch (error) {
+    console.error('Get classes error:', error);
+    res.status(500).json({ message: 'Server error fetching classes' });
+  }
+});
+
+// Get timetable for a specific class
 router.get('/class/:classId', auth, async (req, res) => {
   try {
-    const timetable = await TimetableCell.find({ class: req.params.classId })
-      .populate('subject')
-      .populate('teacher')
-      .populate('room')
-      .populate('class');
-    
-    res.json(timetable);
+    const { classId } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return res.status(400).json({ message: 'Invalid class ID' });
+    }
+
+    // Role-based access control
+    if (req.user.role === 'hod') {
+      const classDoc = await Class.findById(classId);
+      if (!classDoc || classDoc.department !== req.user.department) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
+
+    const timetable = await TimetableCell.findOne({ class: classId })
+      .populate('timetable.subject', 'name code')
+      .populate('timetable.teacher', 'name email')
+      .populate('timetable.room', 'name building')
+      .populate('class', 'name semester department');
+
+    if (!timetable) {
+      return res.json({ success: true, timetable: [] });
+    }
+
+    res.json({
+      success: true,
+      timetable: timetable.timetable || []
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Get class timetable error:', error);
+    res.status(500).json({ message: 'Server error fetching timetable' });
   }
 });
 
-// Get timetable for a teacher
-router.get('/teacher/:teacherId', auth, async (req, res) => {
+// Update timetable slot (Admin/HOD only)
+router.put('/slot', auth, async (req, res) => {
   try {
-    const timetable = await TimetableCell.find({ teacher: req.params.teacherId })
-      .populate('subject')
-      .populate('class')
-      .populate('room');
-    
-    res.json(timetable);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+    const { classId, day, period, updates } = req.body;
 
-// Get timetable for a room
-router.get('/room/:roomId', auth, async (req, res) => {
-  try {
-    const timetable = await TimetableCell.find({ room: req.params.roomId })
-      .populate('subject')
-      .populate('teacher')
-      .populate('class');
-    
-    res.json(timetable);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+    // Check permissions
+    if (!['admin', 'hod'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
 
-// Manual slot filling by teacher
-router.post('/manual', auth, async (req, res) => {
-  try {
-    const { classId, day, period, subjectId, teacherId, roomId } = req.body;
-    
-    // Check if slot is available
-    const existingSlot = await TimetableCell.findOne({
-      class: classId,
-      day,
-      period
-    });
-    
-    if (existingSlot && existingSlot.locked) {
-      return res.status(400).json({ message: 'Slot is already locked' });
+    // HOD can only edit their department's classes
+    if (req.user.role === 'hod') {
+      const classDoc = await Class.findById(classId);
+      if (!classDoc || classDoc.department !== req.user.department) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
     }
-    
-    // Check if teacher is available
-    const teacherConflict = await TimetableCell.findOne({
-      teacher: teacherId,
-      day,
-      period,
-      locked: true
-    });
-    
-    if (teacherConflict) {
-      return res.status(400).json({ message: 'Teacher is not available at this slot' });
-    }
-    
-    // Check if room is available
-    const roomConflict = await TimetableCell.findOne({
-      room: roomId,
-      day,
-      period,
-      locked: true
-    });
-    
-    if (roomConflict) {
-      return res.status(400).json({ message: 'Room is not available at this slot' });
-    }
-    
-    // Create or update the timetable cell
-    const timetableCell = await TimetableCell.findOneAndUpdate(
-      { class: classId, day, period },
+
+    const result = await TimetableCell.findOneAndUpdate(
       {
-        subject: subjectId,
-        teacher: teacherId,
-        room: roomId,
-        locked: true
+        class: classId,
+        'timetable.day': day,
+        'timetable.period': period
       },
-      { upsert: true, new: true }
-    );
-    
-    res.json(timetableCell);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
+      {
+        $set: {
+          'timetable.$.subject': updates.subject,
+          'timetable.$.teacher': updates.teacher,
+          'timetable.$.room': updates.room,
+          'timetable.$.locked': updates.locked
+        }
+      },
+      { new: true }
+    ).populate('timetable.subject', 'name')
+      .populate('timetable.teacher', 'name')
+      .populate('timetable.room', 'name');
 
-// Clear timetable (admin only)
-router.delete('/clear', auth, async (req, res) => {
-  try {
-    // Check if user is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Only admins can clear the timetable' });
-    }
-    
-    await TimetableCell.deleteMany({ locked: false });
-    res.json({ message: 'Timetable cleared successfully' });
+    res.json({
+      success: true,
+      message: 'Timetable slot updated successfully',
+      updatedSlot: result ? result.timetable.find(slot =>
+        slot.day === day && slot.period === period
+      ) : null
+    });
   } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-
-// GET /api/timetable/fixed-slots - Get all fixed timetable slots
-router.get('/fixed-slots', async (req, res) => {
-  try {
-    const fixedSlots = await TimetableCell.find({ locked: true })
-      .populate('subject')
-      .populate('teacher')
-      .populate('room')
-      .populate('class');
-    res.json(fixedSlots);
-  } catch (error) {
-    console.error('Error fetching fixed slots:', error);
-    res.status(500).json({ message: error.message });
+    console.error('Update slot error:', error);
+    res.status(500).json({ message: 'Server error updating slot' });
   }
 });
 

@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 export const AuthContext = createContext();
@@ -6,20 +7,35 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is logged in on app load
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-      // Set default authorization header
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-    }
-
-    setLoading(false);
+    checkAuthStatus();
   }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
+
+      if (token && userData) {
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        
+        // Verify token with backend
+        const response = await api.get("/auth/me");
+        if (response.data.success) {
+          setUser(response.data.user);
+        } else {
+          logout();
+        }
+      }
+    } catch (error) {
+      console.error("Auth check error:", error);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email, password) => {
     try {
@@ -29,56 +45,42 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(userData));
-
-      // Set default authorization header
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      return { success: true };
+      return { success: true, user: userData };
     } catch (error) {
-      return {
-        success: false,
-        message:
-          error.response?.data?.message || "Login failed. Please try again.",
-      };
+      const message = error.response?.data?.message || "Login failed. Please try again.";
+      return { success: false, message };
     }
   };
 
   const signup = async (userData) => {
     try {
-      const response = await api.post("/auth/signup", userData);
-      const { user: newUser, token } = response.data;
-
-      setUser(newUser);
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(newUser));
-
-      // Set default authorization header
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        message:
-          error.response?.data?.message ||
-          "Registration failed. Please try again.",
-      };
-    }
-  };
-  // new
-  const updateFirstLogin = async (value) => {
-    try {
-      await apiUpdateFirstLogin(value);
-      setUser((prev) => ({ ...prev, firstLogin: value }));
-
-      // Update localStorage
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        const updatedUser = { ...JSON.parse(userData), firstLogin: value };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+      const token = localStorage.getItem("token");
+      
+      if (!token) {
+        return { 
+          success: false, 
+          message: "Authentication required. Please login as admin first." 
+        };
       }
+
+      const response = await api.post("/auth/signup", userData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return { 
+        success: true, 
+        message: response.data.message,
+        data: response.data 
+      };
     } catch (error) {
-      console.error("Error updating first login status:", error);
+      console.error("Signup error:", error);
+      const message = error.response?.data?.message || "User creation failed. Please try again.";
+      return { success: false, message };
     }
   };
 
@@ -87,10 +89,37 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     delete api.defaults.headers.common["Authorization"];
+    navigate("/login");
+  };
+
+  const hasRole = (requiredRoles) => {
+    if (!user || !user.role) return false;
+    if (Array.isArray(requiredRoles)) {
+      return requiredRoles.includes(user.role);
+    }
+    return user.role === requiredRoles;
+  };
+
+  const isAdmin = () => hasRole('admin');
+  const isHOD = () => hasRole('hod');
+  const isFaculty = () => hasRole(['assistant_professor', 'associate_professor', 'professor']);
+  const isStudent = () => hasRole('student');
+
+  const value = {
+    user,
+    loading,
+    login,
+    signup,
+    logout,
+    hasRole,
+    isAdmin,
+    isHOD,
+    isFaculty,
+    isStudent
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

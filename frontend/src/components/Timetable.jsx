@@ -1,103 +1,207 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
+import "./Timetable.css";
 
-const Timetable = ({ classId, view }) => {
+const Timetable = ({ user }) => {
   const [timetable, setTimetable] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [classes, setClasses] = useState([]);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [showEdit, setShowEdit] = useState(false);
 
-  const fetchTimetable = async () => {
-    setLoading(true);
-    try {
-      let endpoint = "";
+  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const periods = [1, 2, 3, 4, 5, 6];
 
-      if (view === "class") {
-        if (!classId) {
-          console.warn("No classId provided");
-          return;
-        }
-        endpoint = `timetable/class/${classId}`;
-      } else if (view === "teacher") {
-        const teacherId = localStorage.getItem("teacherId");
-        if (!teacherId) {
-          console.error("No teacherId found in localStorage!");
-          return;
-        }
-        endpoint = `timetable/teacher/${teacherId}`;
-      }
+  const canEdit = user && ["admin", "hod"].includes(user.role);
 
-      if (!endpoint) {
-        console.warn("No endpoint set, skipping fetch.");
-        return;
-      }
+  useEffect(() => {
+    api.get("/timetable/classes")
+      .then(res => setClasses(res.data.classes || []))
+      .catch(err => console.error("Error fetching classes:", err));
+  }, []);
 
-      const response = await api.get(endpoint);
-      console.log("Fetched timetable:", response.data);
+  useEffect(() => {
+    if (!selectedClass) return;
+    api.get(`/timetable/class/${selectedClass}`)
+      .then(res => setTimetable(res.data.timetable || []))
+      .catch(err => console.error("Error fetching timetable:", err));
+  }, [selectedClass]);
 
-      setTimetable(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.error("Error fetching timetable:", error);
-      setTimetable([]);
-    } finally {
-      setLoading(false);
-    }
+  const getSlot = (day, period) =>
+    timetable.find(s => s.day === day && s.period === period);
+
+  const handleSlotClick = (day, period) => {
+    if (!canEdit) return;
+    const slot = getSlot(day, period) || {};
+    setEditingSlot({ day, period });
+    setEditForm({
+      subject: slot.subject?._id || "",
+      teacher: slot.teacher?._id || "",
+      room: slot.room?._id || "",
+      locked: slot.locked || false
+    });
+    setShowEdit(true);
   };
 
-  // ✅ Run API call when component mounts or when classId/view changes
-  useEffect(() => {
-    fetchTimetable();
-  }, [classId, view]);
+  const handleSave = () => {
+    api.put("/timetable/slot", {
+      classId: selectedClass,
+      day: editingSlot.day,
+      period: editingSlot.period,
+      updates: editForm
+    })
+      .then(() => api.get(`/timetable/class/${selectedClass}`))
+      .then(res => {
+        setTimetable(res.data.timetable || []);
+        setShowEdit(false);
+        setEditingSlot(null);
+      })
+      .catch(err => console.error("Error saving slot:", err));
+  };
 
-  const renderTimetable = () => {
-    if (loading) return <div>Loading...</div>;
+  // ✅ Download timetable as CSV
+  const handleDownload = () => {
+    if (!selectedClass || timetable.length === 0) {
+      alert("Please select a class with a timetable first.");
+      return;
+    }
 
-    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "saturday"];
-    const periods = Array.from({ length: 8 }, (_, i) => i + 1);
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += ["Period", ...days].join(",") + "\n";
 
-    return (
-      <div className="timetable-container">
-        <h2>{view === "class" ? "Class" : "Teacher"} Timetable</h2>
-        <table className="timetable">
-          <thead>
-            <tr>
-              <th>Time</th>
-              {days.map((day) => (
-                <th key={day}>{day}</th>
+    periods.forEach(p => {
+      const row = [ `P${p}` ];
+      days.forEach(d => {
+        const slot = getSlot(d, p);
+        if (slot) {
+          row.push(`${slot.subject?.name || ""} - ${slot.teacher?.name || ""} (${slot.room?.name || ""})`);
+        } else {
+          row.push("Free");
+        }
+      });
+      csvContent += row.join(",") + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `timetable_${selectedClass}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="timetable-wrapper">
+      <h2>Class Timetable</h2>
+
+      {/* Class Selector */}
+      <select
+        value={selectedClass}
+        onChange={e => setSelectedClass(e.target.value)}
+        className="class-select"
+      >
+        <option value="">Select Class</option>
+        {classes.map(c => (
+          <option key={c._id} value={c._id}>
+            {c.name}
+          </option>
+        ))}
+      </select>
+
+      {/* Download Button */}
+      {selectedClass && (
+        <button className="download-btn" onClick={handleDownload}>
+          Download Timetable
+        </button>
+      )}
+
+      {/* Show timetable only if class is selected */}
+      {selectedClass && (
+        <div className="timetable-grid-wrapper">
+          <div className="timetable-grid">
+            {/* Header Row */}
+            <div className="grid-header">
+              <div className="grid-cell header-cell">Period</div>
+              {days.map(d => (
+                <div key={d} className="grid-cell header-cell">
+                  {d}
+                </div>
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {periods.map((period) => (
-              <tr key={period}>
-                <td>Period {period}</td>
-                {days.map((day, dayIndex) => {
-                  const slot = timetable.find(
-                    (cell) =>
-                      cell.day === dayIndex && cell.period === period - 1
-                  );
+            </div>
 
+            {/* Timetable Rows */}
+            {periods.map(p => (
+              <div key={p} className="grid-row">
+                <div className="grid-cell period-cell">P{p}</div>
+                {days.map(d => {
+                  const slot = getSlot(d, p);
+                  const editable = canEdit && !slot?.locked;
                   return (
-                    <td key={dayIndex} className={slot?.locked ? "locked" : ""}>
+                    <div
+                      key={d}
+                      className={`grid-cell slot-cell ${editable ? "editable" : ""} ${slot?.locked ? "locked" : ""}`}
+                      onClick={() => handleSlotClick(d, p)}
+                    >
                       {slot ? (
-                        <div>
-                          <div>{slot.subject?.name || "—"}</div>
-                          <div>{slot.teacher?.name || "—"}</div>
-                          <div>{slot.room?.name || "—"}</div>
-                        </div>
+                        <>
+                          <div className="slot-subject">{slot.subject?.name || "—"}</div>
+                          <div className="slot-teacher">{slot.teacher?.name || "—"}</div>
+                          <div className="slot-room">{slot.room?.name || ""}</div>
+                          {slot.locked && <div className="slot-locked">🔒</div>}
+                        </>
                       ) : (
                         "Free"
                       )}
-                    </td>
+                    </div>
                   );
                 })}
-              </tr>
+              </div>
             ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
+          </div>
+        </div>
+      )}
 
-  return renderTimetable();
+      {/* Edit Modal */}
+      {showEdit && (
+        <div className="modal">
+          <div className="modal-content">
+            <h3>
+              Edit {editingSlot.day} - Period {editingSlot.period}
+            </h3>
+            <input
+              placeholder="Subject ID"
+              value={editForm.subject}
+              onChange={e => setEditForm({ ...editForm, subject: e.target.value })}
+            />
+            <input
+              placeholder="Teacher ID"
+              value={editForm.teacher}
+              onChange={e => setEditForm({ ...editForm, teacher: e.target.value })}
+            />
+            <input
+              placeholder="Room ID"
+              value={editForm.room}
+              onChange={e => setEditForm({ ...editForm, room: e.target.value })}
+            />
+            <label>
+              <input
+                type="checkbox"
+                checked={editForm.locked}
+                onChange={e => setEditForm({ ...editForm, locked: e.target.checked })}
+              />
+              Lock Slot
+            </label>
+            <div className="modal-buttons">
+              <button className="save-btn" onClick={handleSave}>Save</button>
+              <button className="cancel-btn" onClick={() => setShowEdit(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Timetable;
