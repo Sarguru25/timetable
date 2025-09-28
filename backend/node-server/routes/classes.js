@@ -1,16 +1,12 @@
 const express = require("express");
 const Class = require("../models/Class.js");
-const auth = require("../middleware/auth.js");
 const Subject = require("../models/Subject.js");
 const Teacher = require("../models/Teacher.js");
-<<<<<<< Updated upstream
-const multer = require("multer");
-=======
 const { auth } = require("../middleware/auth.js");
-const upload = require("../middleware/upload.js");
->>>>>>> Stashed changes
 const xlsx = require("xlsx");
-
+const multer = require("multer");
+// const auth = require("../middleware/auth.js");
+// const upload = require("../middleware/upload.js");
 const router = express.Router();
 
 // =================== GET ALL CLASSES ===================

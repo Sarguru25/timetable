@@ -47,8 +47,4 @@ const TeacherSchema = new mongoose.Schema({
   }
 });
 
-<<<<<<< Updated upstream
-module.exports = mongoose.model('Teacher', TeacherSchema);
-=======
 module.exports = mongoose.model("Teacher", TeacherSchema);
->>>>>>> Stashed changes

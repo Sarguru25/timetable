@@ -1,17 +1,4 @@
 import React, { useState, useContext } from "react";
-<<<<<<< Updated upstream
-import { AuthContext } from "./context/AuthContext.jsx";
-import Navigation from "./components/Navigation.jsx";
-import Login from "./components/Login.jsx";
-import Dashboard from "./components/Dashboard.jsx";
-import Timetable from "./components/Timetable.jsx";
-import ManualScheduler from "./components/ManualScheduler.jsx";
-import Teachers from "./components/Teachers.jsx";
-import Classes from "./components/Classes.jsx";
-import Subjects from "./components/Subjects.jsx";
-import FirstLogin from "./components/FirstLogin.jsx";
-import ScheduleGenerator from "./components/ScheduleGenerator.jsx";
-=======
 import { AuthContext } from "./context/AuthContext";
 import Navigation from "./components/Navigation";
 import Login from "./components/Login";
@@ -30,7 +17,6 @@ import DepartmentManagement from "./components/DepartmentManagement";
 import ScheduleGenerator from "./components/ScheduleGenerator";
 import Department from "./components/Department";
 import ProtectedRoute from "./components/ProtectedRoute";
->>>>>>> Stashed changes
 import "./App.css";
 
 function App() {
@@ -46,34 +32,6 @@ function App() {
     return <Login />;
   }
 
-<<<<<<< Updated upstream
-  if (user.firstLogin) {
-    return <FirstLogin />;
-  }
-
-  const renderContent = () => {
-    switch (activeView) {
-      case "timetable":
-        return (
-          <Timetable
-            classId={selectedClass}
-            teacherId={selectedTeacher}
-            view={selectedClass ? "class" : "teacher"}
-          />
-        );
-      case "teachers":
-        return <Teachers />;
-      case "classes":
-        return <Classes />;
-      case "subjects":
-        return <Subjects />;
-      case "manual":
-        return <ManualScheduler teacherId={user.teacherId || user.id} />;
-      case "generate":
-        return <ScheduleGenerator />;
-      default:
-        return <Dashboard setActiveView={setActiveView} user={user} />;
-=======
   // Role-based dashboard rendering
   const renderDashboard = () => {
     if (isAdmin()) {
@@ -84,7 +42,6 @@ function App() {
       return <FacultyDashboard setActiveView={setActiveView} user={user} />;
     } else if (isStudent()) {
       return <StudentDashboard setActiveView={setActiveView} user={user} />;
->>>>>>> Stashed changes
     }
     return <Unauthorized />;
   };

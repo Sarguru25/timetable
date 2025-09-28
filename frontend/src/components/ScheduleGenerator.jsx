@@ -10,23 +10,11 @@ const ScheduleGenerator = () => {
   const [selectedClassIds, setSelectedClassIds] = useState([]); // Track selected classes
   const [subjectsMap, setSubjectsMap] = useState({});
   const [teachersMap, setTeachersMap] = useState({});
-
+  const [loading, setLoading] = useState(false);
+  
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const periods = [1, 2, 3, 4, 5, 6];
 
-<<<<<<< Updated upstream
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
-
-  const fetchInitialData = async () => {
-    try {
-      const [classesRes, teachersRes, subjectsRes] = await Promise.all([
-        api.get("/classes"),
-        api.get("/teachers"),
-        api.get("/subjects"),
-      ]);
-=======
   // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -36,24 +24,9 @@ const ScheduleGenerator = () => {
           api.get("/teachers"),
           api.get("/subjects"),
         ]);
->>>>>>> Stashed changes
 
         setClasses(classesRes.data);
 
-<<<<<<< Updated upstream
-      const subjMap = {};
-      subjectsRes.data.forEach((s) => { subjMap[s._id] = s.name; });
-      setSubjectsMap(subjMap);
-
-      const teachMap = {};
-      teachersRes.data.forEach((t) => { teachMap[t._id] = t.name; });
-      setTeachersMap(teachMap);
-    } catch (err) {
-      console.error("Error fetching initial data:", err);
-    }
-  };
-
-=======
         // Debugging logs
         console.log("Subjects Response:", subjectsRes.data);
         console.log("Teachers Response:", teachersRes.data);
@@ -106,7 +79,6 @@ const ScheduleGenerator = () => {
   const hasSelectedClasses = selectedClassIds.length > 0;
 
   // Generate schedule for selected classes
->>>>>>> Stashed changes
   const generateSchedule = async () => {
     if (!hasSelectedClasses) {
       setError({ status: "error", message: "Please select at least one class." });
@@ -118,24 +90,16 @@ const ScheduleGenerator = () => {
     setResult(null);
 
     try {
-<<<<<<< Updated upstream
-      const response = await api.post("/schedule/generate", {});
-=======
       const response = await api.post("/schedule/generate", {
         classIds: selectedClassIds
       });
->>>>>>> Stashed changes
       console.log("Frontend received:", response.data);
 
       setResult({
         status: response.data.status,
         message: response.data.message,
-<<<<<<< Updated upstream
-        data: response.data.timetable || [],   // ✅ fixed
-=======
         data: response.data.timetable || [],
         selectedClasses: response.data.selectedClasses || [] // For display if needed
->>>>>>> Stashed changes
       });
     } catch (err) {
       console.error("Schedule generation error:", err);
@@ -148,10 +112,7 @@ const ScheduleGenerator = () => {
     }
   };
 
-<<<<<<< Updated upstream
-=======
   // Get subject + teacher for each cell
->>>>>>> Stashed changes
   const getCellData = (classId, day, period) => {
     if (!result?.data || !Array.isArray(result.data)) return "-";
     const slot = result.data.find((s) => s.classId === classId && s.day === day && s.period === period);
@@ -168,17 +129,12 @@ const ScheduleGenerator = () => {
     );
   };
 
-<<<<<<< Updated upstream
-=======
   // Get class name
->>>>>>> Stashed changes
   const getClassName = (classId) => {
     const classObj = classes.find((c) => c._id === classId);
     return classObj ? `${classObj.name} - ${classObj.semester || 'N/A'}` : classId;
   };
 
-<<<<<<< Updated upstream
-=======
   // UI Rendering
   if (loading) {
     return (
@@ -191,7 +147,6 @@ const ScheduleGenerator = () => {
     );
   }
 
->>>>>>> Stashed changes
   return (
     <div className="generate-schedule">
       <div className="schedule-header">
@@ -199,18 +154,6 @@ const ScheduleGenerator = () => {
         <p>Select classes and click generate to create an optimized timetable.</p>
       </div>
 
-<<<<<<< Updated upstream
-      <div className="schedule-actions">
-        <button
-          className={`generate-btn ${generating ? "generating" : ""}`}
-          onClick={generateSchedule}
-          disabled={generating}
-        >
-          {generating ? "Generating..." : "Generate Automatic Schedule"}
-        </button>
-      </div>
-
-=======
       {/* Class Selection */}
       <div className="class-selection">
         <h3>Select Classes</h3>
@@ -244,7 +187,6 @@ const ScheduleGenerator = () => {
       </div>
 
       {/* Error */}
->>>>>>> Stashed changes
       {error && (
         <div className="error-message">
           <h4>Error</h4>
@@ -252,20 +194,12 @@ const ScheduleGenerator = () => {
         </div>
       )}
 
-<<<<<<< Updated upstream
-      {result && result.status === "success" && Array.isArray(result.data) && (
-        <div className="result-container">
-          <div className="success-message">
-            <h4>✅ {result.message}</h4>
-            <p>Your timetable has been created with all constraints satisfied.</p>
-=======
       {/* Result */}
       {result && result.status === "success" && Array.isArray(result.data) && result.data.length > 0 && (
         <div className="result-container">
           <div className="success-message">
             <h4>✅ {result.message}</h4>
             <p>Your timetable has been created successfully for the selected classes and stored in the database.</p>
->>>>>>> Stashed changes
           </div>
 
           <div className="timetables-container">

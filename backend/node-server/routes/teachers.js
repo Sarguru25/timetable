@@ -1,24 +1,13 @@
-<<<<<<< Updated upstream
-const express = require('express');
-const Teacher = require('../models/Teacher.js');
-const auth = require('../middleware/auth.js');
-=======
 const express = require("express");
 const Teacher = require("../models/Teacher.js");
 const { auth, requireAdmin, requireFaculty } = require("../middleware/auth.js");
 const multer = require("multer");
 const xlsx = require("xlsx");
->>>>>>> Stashed changes
+
+const upload = multer({ dest: "uploads/" });
 
 const router = express.Router();
 
-<<<<<<< Updated upstream
-// Get all teachers
-router.get('/', auth, async (req, res) => {
-  try {
-    const teachers = await Teacher.find().populate('subjectsCanTeach').sort({ name: 1 });
-    res.json(teachers);
-=======
 // =======================
 // Bulk Upload Teachers (Admin only)
 // =======================
@@ -51,16 +40,11 @@ router.post("/upload", auth, requireAdmin, upload.single("file"), async (req, re
       message: "✅ Teachers uploaded successfully",
       teachers: insertedTeachers,
     });
->>>>>>> Stashed changes
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-<<<<<<< Updated upstream
-// Get teacher by ID
-router.get('/:id', auth, async (req, res) => {
-=======
 // =======================
 // Get all teachers (Public)
 // =======================
@@ -78,7 +62,6 @@ router.get("/", async (req, res) => {
 // Get teacher by ID
 // =======================
 router.get("/:id", auth, async (req, res) => {
->>>>>>> Stashed changes
   try {
     const teacher = await Teacher.findById(req.params.id).populate('subjectsCanTeach');
     if (!teacher) {
@@ -91,15 +74,10 @@ router.get("/:id", auth, async (req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
-// Create new teacher
-router.post('/', auth, async (req, res) => {
-=======
 // =======================
 // Create new teacher (Admin only)
 // =======================
 router.post("/", auth, requireAdmin, async (req, res) => {
->>>>>>> Stashed changes
   try {
     const { name, email, subjectsCanTeach, unavailableSlots, preferredSlots, maxHoursPerDay, maxHoursPerWeek, isHOD } = req.body;
     
@@ -122,15 +100,10 @@ router.post("/", auth, requireAdmin, async (req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
-// Update teacher
-router.put('/:id', auth, async (req, res) => {
-=======
 // =======================
 // Update teacher (Admin or Faculty)
 // =======================
 router.put("/:id", auth, requireAdmin, async (req, res) => {
->>>>>>> Stashed changes
   try {
     const { name, email, subjectsCanTeach, unavailableSlots, preferredSlots, maxHoursPerDay, maxHoursPerWeek, isHOD } = req.body;
     
@@ -151,15 +124,10 @@ router.put("/:id", auth, requireAdmin, async (req, res) => {
   }
 });
 
-<<<<<<< Updated upstream
-// Delete teacher
-router.delete('/:id', auth, async (req, res) => {
-=======
 // =======================
 // Delete teacher (Admin only)
 // =======================
 router.delete("/:id", auth, requireAdmin, async (req, res) => {
->>>>>>> Stashed changes
   try {
     const teacher = await Teacher.findByIdAndDelete(req.params.id);
     

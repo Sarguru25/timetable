@@ -17,11 +17,8 @@
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.1.1",
-<<<<<<< Updated upstream
-=======
     "react-router-dom": "^7.9.2",
     "react-select": "^5.10.2",
->>>>>>> Stashed changes
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
