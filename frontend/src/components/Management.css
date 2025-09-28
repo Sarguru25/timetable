@@ -279,8 +279,10 @@
 }
 
 .subject-list {
-  margin-top: 10px;
+  margin-top: 70px;
   padding-top: 10px;
+  position: relative;
+  right: 100px;
   border-top: 1px solid #f0f0f0;
 }
 
@@ -344,8 +346,6 @@
   }
 }
 
-<<<<<<< Updated upstream
-=======
 
 /* Department Management Styles */
 .department-management {
@@ -594,4 +594,3 @@
     align-items: flex-start;
   }
 }
->>>>>>> Stashed changes

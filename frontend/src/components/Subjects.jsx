@@ -10,24 +10,40 @@ const Subjects = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingSubject, setEditingSubject] = useState(null);
   const [file, setFile] = useState(null);
-  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
-  
+  const [error, setError] = useState("");
+  const [useExistingClass, setUseExistingClass] = useState(true);
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
+
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
     type: "all",
     class: "all",
-    teacher: "all"
+    teacher: "all",
   });
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const [formData, setFormData] = useState({
+    // Subject fields
     name: "",
     sCode: "",
     type: "theory",
     hoursPerWeek: 2,
-    classId: "",
     teacherCode: "",
+
+    // Class fields (for existing class)
+    classId: "",
+
+    // Class fields (for new class)
+    className: "",
+    year: 1,
+    section: "A",
+    semester: "",
+    studentCount: 30,
   });
 
   useEffect(() => {
@@ -38,13 +54,13 @@ const Subjects = () => {
 
   const fetchSubjects = async () => {
     try {
-      const response = await api.get("/subjects");
-      setSubjects(Array.isArray(response.data) ? response.data : []);
+      const res = await api.get("/subjects");
+      setSubjects(res.data);
       setLoading(false);
-    } catch (error) {
-      console.error("❌ Error fetching subjects:", error);
+    } catch (err) {
+      // console.error("❌ Error fetching subjects:", err);
+      setError("Failed to fetch subjects. Please try again later.");
       setLoading(false);
-      showNotification("Error fetching subjects", "error");
     }
   };
 
@@ -68,7 +84,10 @@ const Subjects = () => {
 
   const showNotification = (message, type = "success") => {
     setNotification({ show: true, message, type });
-    setTimeout(() => setNotification({ show: false, message: "", type: "" }), 3000);
+    setTimeout(
+      () => setNotification({ show: false, message: "", type: "" }),
+      3000
+    );
   };
 
   const handleFileChange = (e) => setFile(e.target.files[0]);
@@ -78,7 +97,7 @@ const Subjects = () => {
       showNotification("Please select a file", "warning");
       return;
     }
-    
+
     const uploadData = new FormData();
     uploadData.append("file", file);
 
@@ -89,33 +108,75 @@ const Subjects = () => {
       showNotification("Subjects uploaded successfully");
       fetchSubjects();
       setFile(null);
-      document.querySelector('.file-input').value = "";
+      document.querySelector(".file-input").value = "";
     } catch (error) {
       console.error("❌ Error uploading subjects:", error);
       showNotification("Error uploading subjects", "error");
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (editingSubject) {
-        await api.put(`/subjects/${editingSubject._id}`, formData);
-        showNotification("Subject updated successfully");
-      } else {
-        await api.post("/subjects", formData);
-        showNotification("Subject added successfully");
-      }
-      resetForm();
-      fetchSubjects();
-    } catch (error) {
-      console.error("❌ Error saving subject:", error);
-      showNotification("Error saving subject", "error");
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Validation
+  if (!formData.name || !formData.sCode || !formData.hoursPerWeek || !formData.teacherCode) {
+    showNotification("Please fill all required subject fields", "error");
+    return;
+  }
+
+  if (useExistingClass && !formData.classId) {
+    showNotification("Please select a class", "error");
+    return;
+  }
+
+  if (!useExistingClass && (!formData.className || !formData.year || !formData.section || !formData.semester)) {
+    showNotification("Please fill all required class fields", "error");
+    return;
+  }
+
+  try {
+    const payload = {
+      name: formData.name.trim(),
+      sCode: formData.sCode.trim().toUpperCase(),
+      hoursPerWeek: Number(formData.hoursPerWeek),
+      type: formData.type || "theory",
+      mandatory: formData.mandatory ?? true,
+      teacherCode: formData.teacherCode.trim().toUpperCase(),
+      // Include class info
+      classId: useExistingClass ? formData.classId : undefined,
+      className: !useExistingClass ? formData.className.trim() : undefined,
+      year: !useExistingClass ? Number(formData.year) : undefined,
+      section: !useExistingClass ? formData.section.trim() : undefined,
+      semester: !useExistingClass ? Number(formData.semester) : undefined,
+      studentCount: !useExistingClass ? Number(formData.studentCount) || 30 : undefined
+    };
+
+    if (editingSubject) {
+      await api.put(`/subjects/${editingSubject._id}`, payload);
+      showNotification("Subject updated successfully");
+    } else {
+      await api.post("/subjects", payload);
+      showNotification("Subject added successfully");
     }
-  };
+
+    resetForm();
+    fetchSubjects();
+    fetchClasses(); // Refresh classes list in case new class was created
+
+  } catch (error) {
+    console.error("❌ Error saving subject:", error);
+    showNotification(
+      error.response?.data?.message || "Error saving subject",
+      "error"
+    );
+  }
+};
+
+
 
   const handleEdit = (subject) => {
     setEditingSubject(subject);
+    setUseExistingClass(true);
     setFormData({
       name: subject.name,
       sCode: subject.sCode,
@@ -123,6 +184,11 @@ const Subjects = () => {
       hoursPerWeek: subject.hoursPerWeek,
       classId: subject.classId?._id || "",
       teacherCode: subject.teacherId?.tCode || "",
+      className: "",
+      year: 1,
+      section: "A",
+      semester: "",
+      studentCount: 30,
     });
     setShowForm(true);
   };
@@ -142,7 +208,20 @@ const Subjects = () => {
 
   const handleAddNew = () => {
     setEditingSubject(null);
-    setFormData({ name: "", sCode: "", type: "theory", hoursPerWeek: 2, classId: "", teacherCode: "" });
+    setUseExistingClass(true);
+    setFormData({
+      name: "",
+      sCode: "",
+      type: "theory",
+      hoursPerWeek: 2,
+      classId: "",
+      teacherCode: "",
+      className: "",
+      year: 1,
+      section: "A",
+      semester: "",
+      studentCount: 30,
+    });
     setShowForm(true);
   };
 
@@ -158,28 +237,32 @@ const Subjects = () => {
   };
 
   const handleFilterChange = (filterType, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [filterType]: value
+      [filterType]: value,
     }));
   };
 
   const handleSort = (key) => {
-    setSortConfig(prev => ({
+    setSortConfig((prev) => ({
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
   // Filter and sort subjects
   const getFilteredAndSortedSubjects = () => {
-    let filtered = subjects.filter(subject => {
-      const matchesSearch = subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           subject.sCode.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesType = filters.type === "all" || subject.type === filters.type;
-      const matchesClass = filters.class === "all" || subject.classId?._id === filters.class;
-      const matchesTeacher = filters.teacher === "all" || subject.teacherId?._id === filters.teacher;
+    let filtered = subjects.filter((subject) => {
+      const matchesSearch =
+        subject.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        subject.sCode.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesType =
+        filters.type === "all" || subject.type === filters.type;
+      const matchesClass =
+        filters.class === "all" || subject.classId?._id === filters.class;
+      const matchesTeacher =
+        filters.teacher === "all" || subject.teacherId?._id === filters.teacher;
 
       return matchesSearch && matchesType && matchesClass && matchesTeacher;
     });
@@ -191,19 +274,19 @@ const Subjects = () => {
         let bValue = b[sortConfig.key];
 
         // Handle nested objects
-        if (sortConfig.key === 'classId') {
-          aValue = a.classId?.name || '';
-          bValue = b.classId?.name || '';
-        } else if (sortConfig.key === 'teacherId') {
-          aValue = a.teacherId?.name || '';
-          bValue = b.teacherId?.name || '';
+        if (sortConfig.key === "classId") {
+          aValue = a.classId?.name || "";
+          bValue = b.classId?.name || "";
+        } else if (sortConfig.key === "teacherId") {
+          aValue = a.teacherId?.name || "";
+          bValue = b.teacherId?.name || "";
         }
 
         if (aValue < bValue) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+          return sortConfig.direction === "asc" ? -1 : 1;
         }
         if (aValue > bValue) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+          return sortConfig.direction === "asc" ? 1 : -1;
         }
         return 0;
       });
@@ -216,7 +299,7 @@ const Subjects = () => {
 
   const getSortIcon = (key) => {
     if (sortConfig.key !== key) return "↕️";
-    return sortConfig.direction === 'asc' ? "↑" : "↓";
+    return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
   if (loading) {
@@ -240,11 +323,11 @@ const Subjects = () => {
           </button>
           <div className="file-upload-section">
             <label className="file-input-label">
-              <input 
-                type="file" 
+              <input
+                type="file"
                 className="file-input"
-                accept=".xlsx,.xls" 
-                onChange={handleFileChange} 
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
               />
               📁 Upload Excel
             </label>
@@ -269,11 +352,11 @@ const Subjects = () => {
           />
           <span className="search-icon">🔍</span>
         </div>
-        
+
         <div className="filters">
-          <select 
-            value={filters.type} 
-            onChange={(e) => handleFilterChange('type', e.target.value)}
+          <select
+            value={filters.type}
+            onChange={(e) => handleFilterChange("type", e.target.value)}
             className="filter-select"
           >
             <option value="all">All Types</option>
@@ -281,26 +364,27 @@ const Subjects = () => {
             <option value="lab">Lab</option>
           </select>
 
-          <select 
-            value={filters.class} 
-            onChange={(e) => handleFilterChange('class', e.target.value)}
+          <select
+            value={filters.class}
+            onChange={(e) => handleFilterChange("class", e.target.value)}
             className="filter-select"
           >
             <option value="all">All Classes</option>
-            {classes.map(cls => (
+            {classes.map((cls) => (
               <option key={cls._id} value={cls._id}>
-                {cls.name} (Sem {cls.semester})
+                {cls.name} - Year {cls.year} - Section {cls.section} -{" "}
+                {cls.semester}
               </option>
             ))}
           </select>
 
-          <select 
-            value={filters.teacher} 
-            onChange={(e) => handleFilterChange('teacher', e.target.value)}
+          <select
+            value={filters.teacher}
+            onChange={(e) => handleFilterChange("teacher", e.target.value)}
             className="filter-select"
           >
             <option value="all">All Teachers</option>
-            {teachers.map(teacher => (
+            {teachers.map((teacher) => (
               <option key={teacher._id} value={teacher._id}>
                 {teacher.name}
               </option>
@@ -316,90 +400,240 @@ const Subjects = () => {
       {/* Subjects Form Modal */}
       {showForm && (
         <div className="modal-overlay">
-          <div className="modal">
+          <div className="modal large-modal">
             <div className="modal-header">
               <h3>{editingSubject ? "Edit Subject" : "Add New Subject"}</h3>
-              <button className="close-btn" onClick={resetForm}>×</button>
+              <button className="close-btn" onClick={resetForm}>
+                ×
+              </button>
             </div>
             <form onSubmit={handleSubmit} className="subject-form">
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Subject Name *</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
+              {/* Subject Information Section */}
+              <div className="form-section">
+                <h3>Subject Information</h3>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>Subject Name *</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      placeholder="e.g., Mathematics, Physics"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Subject Code *</label>
+                    <input
+                      type="text"
+                      value={formData.sCode}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          sCode: e.target.value.toUpperCase(),
+                        })
+                      }
+                      placeholder="e.g., MATH101, PHY101"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Type</label>
+                    <select
+                      value={formData.type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, type: e.target.value })
+                      }
+                    >
+                      <option value="theory">Theory</option>
+                      <option value="lab">Lab</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Hours Per Week *</label>
+                    <input
+                      type="number"
+                      value={formData.hoursPerWeek}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          hoursPerWeek: parseInt(e.target.value) || 2,
+                        })
+                      }
+                      min="1"
+                      max="10"
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Teacher *</label>
+                    <select
+                      value={formData.teacherCode}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          teacherCode: e.target.value,
+                        })
+                      }
+                      required
+                    >
+                      <option value="">Select Teacher</option>
+                      {teachers.map((t) => (
+                        <option key={t._id} value={t.tCode}>
+                          {t.name} ({t.tCode})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Class Information Section */}
+              <div className="form-section">
+                <div className="section-header">
+                  <h3>Class Information</h3>
+                  <div className="toggle-buttons">
+                    <button
+                      type="button"
+                      className={`toggle-btn ${
+                        useExistingClass ? "active" : ""
+                      }`}
+                      onClick={() => setUseExistingClass(true)}
+                    >
+                      Use Existing Class
+                    </button>
+                    <button
+                      type="button"
+                      className={`toggle-btn ${
+                        !useExistingClass ? "active" : ""
+                      }`}
+                      onClick={() => setUseExistingClass(false)}
+                    >
+                      Create New Class
+                    </button>
+                  </div>
                 </div>
 
-                <div className="form-group">
-                  <label>Subject Code *</label>
-                  <input
-                    type="text"
-                    value={formData.sCode}
-                    onChange={(e) => setFormData({ ...formData, sCode: e.target.value })}
-                    required
-                  />
-                </div>
+                {useExistingClass ? (
+                  <div className="form-group full-width">
+                    <label>Select Class *</label>
+                    <select
+                      value={formData.classId}
+                      onChange={(e) =>
+                        setFormData({ ...formData, classId: e.target.value })
+                      }
+                      required
+                    >
+                      <option value="">Select Class</option>
+                      {classes.map((cls) => (
+                        <option key={cls._id} value={cls._id}>
+                          {cls.name} - Year {cls.year} - Section {cls.section} -{" "}
+                          {cls.semester}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Class Name *</label>
+                      <input
+                        type="text"
+                        value={formData.className}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            className: e.target.value,
+                          })
+                        }
+                        placeholder="e.g., BCA, BCOM"
+                        required
+                      />
+                    </div>
 
-                <div className="form-group">
-                  <label>Type</label>
-                  <select value={formData.type} onChange={(e) => setFormData({ ...formData, type: e.target.value })}>
-                    <option value="theory">Theory</option>
-                    <option value="lab">Lab</option>
-                  </select>
-                </div>
+                    <div className="form-group">
+                      <label>Year *</label>
+                      <select
+                        value={formData.year}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            year: parseInt(e.target.value),
+                          })
+                        }
+                        required
+                      >
+                        <option value={1}>Year 1</option>
+                        <option value={2}>Year 2</option>
+                        <option value={3}>Year 3</option>
+                        <option value={4}>Year 4</option>
+                      </select>
+                    </div>
 
-                <div className="form-group">
-                  <label>Hours Per Week</label>
-                  <input
-                    type="number"
-                    value={formData.hoursPerWeek}
-                    onChange={(e) => setFormData({ ...formData, hoursPerWeek: parseInt(e.target.value) })}
-                    min="1"
-                    max="10"
-                  />
-                </div>
+                    <div className="form-group">
+                      <label>Section *</label>
+                      <input
+                        type="text"
+                        value={formData.section}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            section: e.target.value.toUpperCase(),
+                          })
+                        }
+                        placeholder="e.g., A, B"
+                        maxLength="1"
+                        required
+                      />
+                    </div>
 
-                <div className="form-group">
-                  <label>Class *</label>
-                  <select
-                    value={formData.classId}
-                    onChange={(e) => setFormData({ ...formData, classId: e.target.value })}
-                    required
-                  >
-                    <option value="">Select Class</option>
-                    {classes.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name} (Sem {cls.semester})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <div className="form-group">
+                      <label>Semester *</label>
+                      <input
+                        type="text"
+                        value={formData.semester}
+                        onChange={(e) =>
+                          setFormData({ ...formData, semester: e.target.value })
+                        }
+                        placeholder="e.g., Semester 1"
+                        required
+                      />
+                    </div>
 
-                <div className="form-group">
-                  <label>Teacher *</label>
-                  <select
-                    value={formData.teacherCode}
-                    onChange={(e) => setFormData({ ...formData, teacherCode: e.target.value })}
-                    required
-                  >
-                    <option value="">Select Teacher</option>
-                    {teachers.map((t) => (
-                      <option key={t._id} value={t.tCode}>
-                        {t.name} ({t.tCode})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    <div className="form-group">
+                      <label>Student Count</label>
+                      <input
+                        type="number"
+                        value={formData.studentCount}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            studentCount: parseInt(e.target.value) || 30,
+                          })
+                        }
+                        min="1"
+                        max="100"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="form-actions">
                 <button type="submit" className="btn btn-primary">
                   {editingSubject ? "Update Subject" : "Save Subject"}
                 </button>
-                <button type="button" className="btn btn-secondary" onClick={resetForm}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={resetForm}
+                >
                   Cancel
                 </button>
               </div>
@@ -419,23 +653,29 @@ const Subjects = () => {
           <table className="data-grid">
             <thead>
               <tr>
-                <th onClick={() => handleSort('sCode')} className="sortable">
-                  Code {getSortIcon('sCode')}
+                <th onClick={() => handleSort("sCode")} className="sortable">
+                  Code {getSortIcon("sCode")}
                 </th>
-                <th onClick={() => handleSort('name')} className="sortable">
-                  Subject Name {getSortIcon('name')}
+                <th onClick={() => handleSort("name")} className="sortable">
+                  Subject Name {getSortIcon("name")}
                 </th>
-                <th onClick={() => handleSort('type')} className="sortable">
-                  Type {getSortIcon('type')}
+                <th onClick={() => handleSort("type")} className="sortable">
+                  Type {getSortIcon("type")}
                 </th>
-                <th onClick={() => handleSort('hoursPerWeek')} className="sortable">
-                  Hours/Week {getSortIcon('hoursPerWeek')}
+                <th
+                  onClick={() => handleSort("hoursPerWeek")}
+                  className="sortable"
+                >
+                  Hours/Week {getSortIcon("hoursPerWeek")}
                 </th>
-                <th onClick={() => handleSort('classId')} className="sortable">
-                  Class {getSortIcon('classId')}
+                <th onClick={() => handleSort("classId")} className="sortable">
+                  Class {getSortIcon("classId")}
                 </th>
-                <th onClick={() => handleSort('teacherId')} className="sortable">
-                  Teacher {getSortIcon('teacherId')}
+                <th
+                  onClick={() => handleSort("teacherId")}
+                  className="sortable"
+                >
+                  Teacher {getSortIcon("teacherId")}
                 </th>
                 <th>Actions</th>
               </tr>
@@ -447,9 +687,7 @@ const Subjects = () => {
                     <span className="subject-code">{subject.sCode}</span>
                   </td>
                   <td>
-                    <div className="subject-name">
-                      {subject.name}
-                    </div>
+                    <div className="subject-name">{subject.name}</div>
                   </td>
                   <td>
                     <span className={`type-badge ${subject.type}`}>
@@ -464,7 +702,9 @@ const Subjects = () => {
                   <td>
                     {subject.classId ? (
                       <span className="class-info">
-                        {subject.classId.name} (Sem {subject.classId.semester})
+                        {subject.classId.name} - Year {subject.classId.year} -
+                        Section {subject.classId.section} -{" "}
+                        {subject.classId.semester}
                       </span>
                     ) : (
                       <span className="no-data">N/A</span>
@@ -474,7 +714,9 @@ const Subjects = () => {
                     {subject.teacherId ? (
                       <span className="teacher-info">
                         {subject.teacherId.name}
-                        <span className="teacher-code">({subject.teacherId.tCode})</span>
+                        <span className="teacher-code">
+                          ({subject.teacherId.tCode})
+                        </span>
                       </span>
                     ) : (
                       <span className="no-data">N/A</span>
@@ -482,14 +724,14 @@ const Subjects = () => {
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button 
+                      <button
                         className="btn-edit"
                         onClick={() => handleEdit(subject)}
                         title="Edit subject"
                       >
                         ✏️
                       </button>
-                      <button 
+                      <button
                         className="btn-delete"
                         onClick={() => handleDelete(subject._id)}
                         title="Delete subject"
@@ -504,8 +746,6 @@ const Subjects = () => {
           </table>
         )}
       </div>
-
-      {/* Pagination would go here if needed */}
     </div>
   );
 };

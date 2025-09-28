@@ -6,6 +6,18 @@ const ClassSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  year: {
+    type: Number,
+    required: true,
+    min: 1,
+    max: 4
+  },
+  section: {
+    type: String,
+    required: true,
+    trim: true,
+    uppercase: true
+  },
   semester: {
     type: String,
     required: true,
@@ -41,7 +53,7 @@ const ClassSchema = new mongoose.Schema({
   }
 });
 
-// Add index for better performance
-ClassSchema.index({ name: 1, semester: 1 }, { unique: true });
+// Add compound index for better performance and uniqueness
+ClassSchema.index({ name: 1, year: 1, section: 1, semester: 1 }, { unique: true });
 
 module.exports = mongoose.model('Class', ClassSchema);

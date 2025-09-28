@@ -105,8 +105,9 @@ const Navigation = ({ activeView, setActiveView, user }) => {
               className={`nav-link ${activeView === item.view ? "active" : ""}`}
               onClick={() => handleNavClick(item.view)}
             >
-              <span className="nav-icon">{item.icon}</span>
+              {/* <span className="nav-icon">{item.icon}</span> */}
               {item.label}
+              {/* <hr /> */}
             </button>
           ))}
         </nav>

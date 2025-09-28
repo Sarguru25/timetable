@@ -5,8 +5,6 @@ const Teacher = require("../models/Teacher.js");
 const { auth } = require("../middleware/auth.js");
 const xlsx = require("xlsx");
 const multer = require("multer");
-// const auth = require("../middleware/auth.js");
-// const upload = require("../middleware/upload.js");
 const router = express.Router();
 
 // =================== GET ALL CLASSES ===================
@@ -14,7 +12,8 @@ router.get("/", auth, async (req, res) => {
   try {
     const classes = await Class.find()
       .populate("subjects.subject")
-      .populate("subjects.teacher");
+      .populate("subjects.teacher")
+      .sort({ name: 1, year: 1, section: 1 });
     res.json(classes);
   } catch (error) {
     console.error("Get classes error:", error);
@@ -42,18 +41,38 @@ router.get("/:id", auth, async (req, res) => {
 // =================== CREATE NEW CLASS ===================
 router.post("/", auth, async (req, res) => {
   try {
-    const { name, semester, subjects, studentCount, sharedStudents } = req.body;
+    const { name, year, section, semester, subjects, studentCount } = req.body;
+
+    // Check if class already exists
+    const existingClass = await Class.findOne({
+      name,
+      year,
+      section,
+      semester
+    });
+
+    if (existingClass) {
+      return res.status(400).json({ 
+        message: "Class with same name, year, section and semester already exists" 
+      });
+    }
 
     const classObj = new Class({
       name,
+      year,
+      section,
       semester,
       subjects,
       studentCount,
-      sharedStudents,
     });
 
     const savedClass = await classObj.save();
-    res.status(201).json(savedClass);
+    // Populate the saved class
+    const populatedClass = await Class.findById(savedClass._id)
+      .populate("subjects.subject")
+      .populate("subjects.teacher");
+    
+    res.status(201).json(populatedClass);
   } catch (error) {
     console.error("Create class error:", error);
     res.status(400).json({ message: error.message });
@@ -63,11 +82,11 @@ router.post("/", auth, async (req, res) => {
 // =================== UPDATE CLASS ===================
 router.put("/:id", auth, async (req, res) => {
   try {
-    const { name, semester, subjects, studentCount, sharedStudents } = req.body;
+    const { name, year, section, semester, subjects, studentCount } = req.body;
 
     const classObj = await Class.findByIdAndUpdate(
       req.params.id,
-      { name, semester, subjects, studentCount, sharedStudents },
+      { name, year, section, semester, subjects, studentCount },
       { new: true, runValidators: true }
     )
       .populate("subjects.subject")
@@ -101,8 +120,6 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 // =================== BULK UPLOAD (Excel) ===================
-
-// Store file in memory (not on disk)
 const upload = multer({ storage: multer.memoryStorage() });
 
 router.post("/bulk-upload", upload.single("file"), async (req, res) => {
@@ -111,7 +128,6 @@ router.post("/bulk-upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-    // Read Excel buffer
     const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
@@ -121,18 +137,14 @@ router.post("/bulk-upload", upload.single("file"), async (req, res) => {
       return res.status(400).json({ error: "Empty Excel file" });
     }
 
-    // Expected Excel Headers: Class Name | Semester | Student Count | Subjects
+    // Expected Excel Headers: Class Name | Year | Section | Semester | Student Count
     const classes = data.map((row) => ({
       name: row["Class Name"] || "Unnamed Class",
-      semester: row["Semester"] || "Unknown",
+      year: row["Year"] || 1,
+      section: String(row["Section"] || "A").toUpperCase(),
+      semester: row["Semester"] || "Semester 1",
       studentCount: row["Student Count"] || 30,
-      subjects: row["Subjects"]
-        ? row["Subjects"].split(",").map((s) => ({
-            subject: s.trim(), // keep as string or later replace with ObjectId
-            teacher: null, // assign later if needed
-            hoursPerWeek: 2,
-          }))
-        : [],
+      subjects: []
     }));
 
     // Save all classes
