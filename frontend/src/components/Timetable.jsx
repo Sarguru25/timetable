@@ -10,26 +10,35 @@ const Timetable = ({ user }) => {
   const [editForm, setEditForm] = useState({});
   const [showEdit, setShowEdit] = useState(false);
 
-  const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const days = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
   const periods = [1, 2, 3, 4, 5, 6];
 
   const canEdit = user && ["admin", "hod"].includes(user.role);
 
   useEffect(() => {
-    api.get("/timetable/classes")
-      .then(res => setClasses(res.data.classes || []))
-      .catch(err => console.error("Error fetching classes:", err));
+    api
+      .get("/timetable/classes")
+      .then((res) => setClasses(res.data.classes || []))
+      .catch((err) => console.error("Error fetching classes:", err));
   }, []);
 
   useEffect(() => {
     if (!selectedClass) return;
-    api.get(`/timetable/class/${selectedClass}`)
-      .then(res => setTimetable(res.data.timetable || []))
-      .catch(err => console.error("Error fetching timetable:", err));
+    api
+      .get(`/timetable/class/${selectedClass}`)
+      .then((res) => setTimetable(res.data.timetable || []))
+      .catch((err) => console.error("Error fetching timetable:", err));
   }, [selectedClass]);
 
   const getSlot = (day, period) =>
-    timetable.find(s => s.day === day && s.period === period);
+    timetable.find((s) => s.day === day && s.period === period);
 
   const handleSlotClick = (day, period) => {
     if (!canEdit) return;
@@ -39,25 +48,26 @@ const Timetable = ({ user }) => {
       subject: slot.subject?._id || "",
       teacher: slot.teacher?._id || "",
       room: slot.room?._id || "",
-      locked: slot.locked || false
+      locked: slot.locked || false,
     });
     setShowEdit(true);
   };
 
   const handleSave = () => {
-    api.put("/timetable/slot", {
-      classId: selectedClass,
-      day: editingSlot.day,
-      period: editingSlot.period,
-      updates: editForm
-    })
+    api
+      .put("/timetable/slot", {
+        classId: selectedClass,
+        day: editingSlot.day,
+        period: editingSlot.period,
+        updates: editForm,
+      })
       .then(() => api.get(`/timetable/class/${selectedClass}`))
-      .then(res => {
+      .then((res) => {
         setTimetable(res.data.timetable || []);
         setShowEdit(false);
         setEditingSlot(null);
       })
-      .catch(err => console.error("Error saving slot:", err));
+      .catch((err) => console.error("Error saving slot:", err));
   };
 
   // ✅ Download timetable as CSV
@@ -70,12 +80,16 @@ const Timetable = ({ user }) => {
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += ["Period", ...days].join(",") + "\n";
 
-    periods.forEach(p => {
-      const row = [ `P${p}` ];
-      days.forEach(d => {
+    periods.forEach((p) => {
+      const row = [`P${p}`];
+      days.forEach((d) => {
         const slot = getSlot(d, p);
         if (slot) {
-          row.push(`${slot.subject?.name || ""} - ${slot.teacher?.name || ""} (${slot.room?.name || ""})`);
+          row.push(
+            `${slot.subject?.name || ""} - ${slot.teacher?.name || ""} (${
+              slot.room?.name || ""
+            })`
+          );
         } else {
           row.push("Free");
         }
@@ -99,11 +113,11 @@ const Timetable = ({ user }) => {
       {/* Class Selector */}
       <select
         value={selectedClass}
-        onChange={e => setSelectedClass(e.target.value)}
+        onChange={(e) => setSelectedClass(e.target.value)}
         className="class-select"
       >
         <option value="">Select Class</option>
-        {classes.map(c => (
+        {classes.map((c) => (
           <option key={c._id} value={c._id}>
             {c.name}
           </option>
@@ -121,34 +135,44 @@ const Timetable = ({ user }) => {
       {selectedClass && (
         <div className="timetable-grid-wrapper">
           <div className="timetable-grid">
-            {/* Header Row */}
-            <div className="grid-header">
-              <div className="grid-cell header-cell">Period</div>
-              {days.map(d => (
-                <div key={d} className="grid-cell header-cell">
-                  {d}
+            {/* Header Row: Empty top-left + Periods */}
+            <div className="grid-row">
+              <div className="grid-cell header-cell">Day</div>
+              {periods.map((p) => (
+                <div key={p} className="grid-cell header-cell">
+                  P{p}
                 </div>
               ))}
             </div>
 
-            {/* Timetable Rows */}
-            {periods.map(p => (
-              <div key={p} className="grid-row">
-                <div className="grid-cell period-cell">P{p}</div>
-                {days.map(d => {
+            {/* Timetable Rows: Each day is a row */}
+            {days.map((d) => (
+              <div key={d} className="grid-row">
+                <div className="grid-cell header-cell">{d}</div>{" "}
+                {/* Day label */}
+                {periods.map((p) => {
                   const slot = getSlot(d, p);
                   const editable = canEdit && !slot?.locked;
+
                   return (
                     <div
-                      key={d}
-                      className={`grid-cell slot-cell ${editable ? "editable" : ""} ${slot?.locked ? "locked" : ""}`}
+                      key={`${d}-${p}`}
+                      className={`grid-cell slot-cell ${
+                        editable ? "editable" : ""
+                      } ${slot?.locked ? "locked" : ""}`}
                       onClick={() => handleSlotClick(d, p)}
                     >
                       {slot ? (
                         <>
-                          <div className="slot-subject">{slot.subject?.name || "—"}</div>
-                          <div className="slot-teacher">{slot.teacher?.name || "—"}</div>
-                          <div className="slot-room">{slot.room?.name || ""}</div>
+                          <div className="slot-subject">
+                            {slot.subject?.name || "—"}
+                          </div>
+                          <div className="slot-teacher">
+                            {slot.teacher?.name || "—"}
+                          </div>
+                          <div className="slot-room">
+                            {slot.room?.name || ""}
+                          </div>
                           {slot.locked && <div className="slot-locked">🔒</div>}
                         </>
                       ) : (
@@ -173,29 +197,41 @@ const Timetable = ({ user }) => {
             <input
               placeholder="Subject ID"
               value={editForm.subject}
-              onChange={e => setEditForm({ ...editForm, subject: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, subject: e.target.value })
+              }
             />
             <input
               placeholder="Teacher ID"
               value={editForm.teacher}
-              onChange={e => setEditForm({ ...editForm, teacher: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, teacher: e.target.value })
+              }
             />
             <input
               placeholder="Room ID"
               value={editForm.room}
-              onChange={e => setEditForm({ ...editForm, room: e.target.value })}
+              onChange={(e) =>
+                setEditForm({ ...editForm, room: e.target.value })
+              }
             />
             <label>
               <input
                 type="checkbox"
                 checked={editForm.locked}
-                onChange={e => setEditForm({ ...editForm, locked: e.target.checked })}
+                onChange={(e) =>
+                  setEditForm({ ...editForm, locked: e.target.checked })
+                }
               />
               Lock Slot
             </label>
             <div className="modal-buttons">
-              <button className="save-btn" onClick={handleSave}>Save</button>
-              <button className="cancel-btn" onClick={() => setShowEdit(false)}>Cancel</button>
+              <button className="save-btn" onClick={handleSave}>
+                Save
+              </button>
+              <button className="cancel-btn" onClick={() => setShowEdit(false)}>
+                Cancel
+              </button>
             </div>
           </div>
         </div>

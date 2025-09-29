@@ -11,92 +11,125 @@ const router = express.Router();
 // Upload Excel and add subjects
 router.post('/upload', auth, upload.single('file'), async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
 
+    // Read Excel file
     const workbook = xlsx.readFile(req.file.path);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const rows = xlsx.utils.sheet_to_json(sheet);
 
-    if (!rows.length) return res.status(400).json({ message: "Excel file is empty" });
-
-    let insertedCount = 0;
-    for (const row of rows) {
-      let { name, sCode, type, hoursPerWeek, className, year, section, semester, teacherCode } = row;
-
-      if (!name || sCode == null || !hoursPerWeek || !className || !year || !section || !semester || !teacherCode) continue;
-
-      sCode = String(sCode).trim().toUpperCase();
-      name = String(name).trim();
-      teacherCode = String(teacherCode).trim().toUpperCase();
-      className = String(className).trim();
-      section = String(section).trim().toUpperCase();
-      semester = String(semester).trim();
-      type = type?.toLowerCase() === "lab" ? "lab" : "theory";
-      hoursPerWeek = Number(hoursPerWeek);
-      year = Number(year);
-
-      // Find or create class
-      let foundClass = await Class.findOne({ 
-        name: className, 
-        year: year, 
-        section: section,
-        semester: semester
-      });
-
-      if (!foundClass) {
-        // Create new class if it doesn't exist
-        foundClass = new Class({
-          name: className,
-          year: year,
-          section: section,
-          semester: semester,
-          studentCount: 30, // Default value
-          subjects: []
-        });
-        await foundClass.save();
-      }
-
-      const foundTeacher = await Teacher.findOne({ tCode: teacherCode });
-      if (!foundTeacher) {
-        console.log(`Teacher not found: ${teacherCode}`);
-        continue;
-      }
-
-      const existingSubject = await Subject.findOne({ sCode, classId: foundClass._id });
-      if (existingSubject) {
-        console.log(`Subject already exists: ${sCode} in class ${foundClass._id}`);
-        continue;
-      }
-
-      // Create subject
-      const subject = new Subject({
-        name,
-        sCode,
-        type,
-        hoursPerWeek,
-        classId: foundClass._id,
-        teacherId: foundTeacher._id,
-      });
-
-      const savedSubject = await subject.save();
-
-      // Add subject to class
-      foundClass.subjects.push({
-        subject: savedSubject._id,
-        teacher: foundTeacher._id,
-        hoursPerWeek,
-      });
-      await foundClass.save();
-
-      insertedCount++;
+    if (!rows.length) {
+      return res.status(400).json({ message: "Excel file is empty" });
     }
 
-    res.status(201).json({ message: `✅ ${insertedCount} subjects uploaded successfully` });
+    let insertedCount = 0;
+    let skipped = [];
+
+    for (const row of rows) {
+      try {
+        let {
+          name,
+          sCode,
+          type,
+          hoursPerWeek,
+          className,
+          year,
+          section,
+          semester,
+          teacherCode,
+          studentCount
+        } = row;
+
+        // Basic validation
+        if (!name || !sCode || !hoursPerWeek || !className || !year || !section || !semester || !teacherCode) {
+          skipped.push({ row, reason: "Missing required fields" });
+          continue;
+        }
+
+        // Normalize values
+        name = String(name).trim();
+        sCode = String(sCode).trim().toUpperCase();
+        teacherCode = String(teacherCode).trim().toUpperCase();
+        className = String(className).trim();
+        section = String(section).trim().toUpperCase();
+        semester = String(semester).trim();
+        year = Number(year);
+        hoursPerWeek = Number(hoursPerWeek);
+        type = type?.toLowerCase() === "lab" ? "lab" : "theory";
+
+        // Find or create class
+        let foundClass = await Class.findOne({
+          name: className,
+          year,
+          section,
+          semester
+        });
+
+        if (!foundClass) {
+          foundClass = new Class({
+            name: className,
+            year,
+            section,
+            semester,
+            studentCount: studentCount || 30,
+            subjects: []
+          });
+          await foundClass.save();
+        }
+
+        // Find teacher
+        const foundTeacher = await Teacher.findOne({ tCode: teacherCode });
+        if (!foundTeacher) {
+          skipped.push({ row, reason: `Teacher not found (${teacherCode})` });
+          continue;
+        }
+
+        // Check subject duplication
+        const existingSubject = await Subject.findOne({ sCode, classId: foundClass._id });
+        if (existingSubject) {
+          skipped.push({ row, reason: `Subject already exists (${sCode}) in ${className}-${section}` });
+          continue;
+        }
+
+        // Create subject
+        const subject = new Subject({
+          name,
+          sCode,
+          type,
+          hoursPerWeek,
+          classId: foundClass._id,
+          teacherId: foundTeacher._id,
+        });
+
+        const savedSubject = await subject.save();
+
+        // Link subject to class
+        foundClass.subjects.push({
+          subject: savedSubject._id,
+          teacher: foundTeacher._id,
+          hoursPerWeek,
+        });
+        await foundClass.save();
+
+        insertedCount++;
+      } catch (rowError) {
+        skipped.push({ row, reason: rowError.message });
+        console.error("Row processing error:", rowError);
+      }
+    }
+
+    res.status(201).json({
+      message: `✅ ${insertedCount} subjects uploaded successfully`,
+      skipped
+    });
   } catch (error) {
     console.error("❌ Upload Error:", error);
     res.status(500).json({ message: error.message });
   }
 });
+
 
 // Get all subjects
 router.get("/", auth, async (req, res) => {

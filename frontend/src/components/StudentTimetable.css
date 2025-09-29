@@ -1,0 +1,197 @@
+.student-timetable {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.timetable-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.header-content h1 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+}
+
+.class-select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.month-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.month-header h2 {
+  margin: 0;
+  color: #34495e;
+  font-size: 20px;
+}
+
+.calendar-week {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 30px;
+}
+
+.week-days, .week-dates {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  text-align: center;
+}
+
+.week-days .day {
+  font-weight: bold;
+  color: #7f8c8d;
+  padding: 8px;
+}
+
+.week-dates .date {
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.week-dates .date:hover {
+  background-color: #e9ecef;
+}
+
+.week-dates .date.active {
+  background-color: #3498db;
+  color: white;
+}
+
+.day-timetable {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.day-header {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 20px;
+  margin: 0;
+}
+
+.day-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.periods-list {
+  padding: 0;
+}
+
+.period-item {
+  border-bottom: 1px solid #ecf0f1;
+  padding: 15px 20px;
+  transition: background-color 0.3s;
+}
+
+.period-item:hover {
+  background-color: #f8f9fa;
+}
+
+.period-item:last-child {
+  border-bottom: none;
+}
+
+.period-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.period-code {
+  font-weight: bold;
+  color: #e74c3c;
+  font-size: 16px;
+}
+
+.period-time {
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.period-details .subject {
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+
+.period-details .teacher {
+  color: #27ae60;
+  font-style: italic;
+}
+
+.message {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #856404;
+}
+
+.cancelled-badge {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 8px;
+  display: inline-block;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  font-size: 18px;
+  color: #7f8c8d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .student-timetable {
+    padding: 10px;
+  }
+  
+  .timetable-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .period-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .calendar-week {
+    padding: 10px;
+  }
+  
+  .week-days .day,
+  .week-dates .date {
+    padding: 5px;
+    font-size: 12px;
+  }
+}

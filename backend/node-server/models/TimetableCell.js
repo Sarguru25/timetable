@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
-
 const TimetableCellSchema = new mongoose.Schema({
   class: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Class',
     required: true,
-    unique: true // one timetable per class
+    unique: true
   },
   timetable: [
     {
@@ -18,7 +17,8 @@ const TimetableCellSchema = new mongoose.Schema({
       subject: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject' },
       teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'Teacher' },
       room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
-      locked: { type: Boolean, default: false }
+      locked: { type: Boolean, default: false },
+      description: { type: String, default: "" } // Add this line
     }
   ],
   isPublished: { type: Boolean, default: false },

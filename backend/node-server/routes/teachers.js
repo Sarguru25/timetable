@@ -77,53 +77,32 @@ router.get("/:id", auth, async (req, res) => {
 // =======================
 // Create new teacher (Admin only)
 // =======================
-router.post("/", auth, requireAdmin, async (req, res) => {
+router.post("/", auth, async (req, res) => {
   try {
-    const { name, email, subjectsCanTeach, unavailableSlots, preferredSlots, maxHoursPerDay, maxHoursPerWeek, isHOD } = req.body;
-    
-    const teacher = new Teacher({
-      name,
-      email,
-      subjectsCanTeach,
-      unavailableSlots,
-      preferredSlots,
-      maxHoursPerDay,
-      maxHoursPerWeek,
-      isHOD
-    });
-    
+    const teacher = new Teacher(req.body);
     const savedTeacher = await teacher.save();
     res.status(201).json(savedTeacher);
   } catch (error) {
-    console.error("Error creating teacher:", error);
     res.status(400).json({ message: error.message });
   }
 });
+
 
 // =======================
 // Update teacher (Admin or Faculty)
 // =======================
-router.put("/:id", auth, requireAdmin, async (req, res) => {
+router.put("/:id", auth, async (req, res) => {
   try {
-    const { name, email, subjectsCanTeach, unavailableSlots, preferredSlots, maxHoursPerDay, maxHoursPerWeek, isHOD } = req.body;
-    
-    const teacher = await Teacher.findByIdAndUpdate(
-      req.params.id,
-      { name, email, subjectsCanTeach, unavailableSlots, preferredSlots, maxHoursPerDay, maxHoursPerWeek, isHOD },
-      { new: true, runValidators: true }
-    ).populate('subjectsCanTeach');
-    
-    if (!teacher) {
-      return res.status(404).json({ message: 'Teacher not found' });
-    }
-    
+    const teacher = await Teacher.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
+    if (!teacher) return res.status(404).json({ message: "Teacher not found" });
     res.json(teacher);
   } catch (error) {
-    console.error("Error updating teacher:", error);
     res.status(400).json({ message: error.message });
   }
 });
-
 // =======================
 // Delete teacher (Admin only)
 // =======================

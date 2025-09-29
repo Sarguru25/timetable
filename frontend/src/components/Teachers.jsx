@@ -61,7 +61,7 @@ const Teachers = () => {
       resetForm();
       fetchTeachers();
     } catch (error) {
-      console.error("❌ Error saving teacher:", error);
+      // console.error("❌ Error saving teacher:", error);
       showNotification("Error saving teacher", "error");
     }
   };

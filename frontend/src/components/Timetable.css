@@ -20,7 +20,7 @@ body {
 
 .timetable-grid {
   display: grid;
-  grid-template-columns: 80px repeat(6, 1fr);
+  grid-template-columns: 100px repeat(6, 1fr);
   border: 1px solid #ccc;
   min-width: 600px;
 }

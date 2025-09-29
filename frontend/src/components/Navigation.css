@@ -15,7 +15,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  height: 60px;
+  height: 80px;
   width: 100%;
   background-color: #19183b;
   color: white;
@@ -123,10 +123,10 @@
   left: 0;
   width: 260px;
   height: calc(100% - 60px);
-  background-color: #708993;
+  background-color: #609eb6;
   padding: 20px;
   overflow-y: auto;
-  transition: left 0.3s ease;
+  transition: left 0.2s ease;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   z-index: 1000;
 }
@@ -167,9 +167,10 @@
 }
 .nav-link.active {
   scale: 1.18;
-  background: #6a7070a3; 
+  background: #302ed7a3; 
   color: #ffffff;      
-  font-weight: 500;     
+  font-weight: 500;  
+  border-radius: 0px;   
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 

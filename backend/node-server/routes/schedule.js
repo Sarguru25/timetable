@@ -11,6 +11,8 @@ const router = express.Router();
 
 // Trigger automatic scheduling for selected classes
 router.post("/generate", auth, async (req, res) => {
+     console.log("Request Body:", req.body); // Debug input
+
   try {
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'Only admins can generate schedules' });

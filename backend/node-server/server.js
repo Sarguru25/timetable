@@ -13,7 +13,7 @@ app.use(express.json());
 require('./models/User');
 require('./models/Teacher');
 require('./models/Student');
-
+const academicTimetableRoutes = require('./routes/academicTimetable');
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users')); // Add this line
@@ -26,6 +26,7 @@ app.use('/api/timetable', require('./routes/timetable'));
 app.use('/api/departments', require('./routes/departments')); // Add this line
 app.use('/api/schedule', require('./routes/schedule'));
 
+app.use('/api/academic-timetable', academicTimetableRoutes);
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' });

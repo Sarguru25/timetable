@@ -47,11 +47,8 @@ const UserManagement = () => {
 
   
   const departments = [
-    "Computer Science",
-    "Mathematics",
-    "Physics",
-    "Chemistry",
-    "Biology",
+    "B.Com",
+    "BBA"
   ];
 
   const genders = ["Male", "Female", "Other"];
@@ -236,7 +233,7 @@ const handleBulkUpload = async (e) => {
       <div className="management-content">
         {activeTab === "single" ? (
           <div className="create-user-form">
-            <h3>Create New User</h3>
+            {/* <h3>Create New User</h3> */}
 
             <div className="user-type-selector">
               <label>Create login for:</label>

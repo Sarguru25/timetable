@@ -17,6 +17,7 @@ import DepartmentManagement from "./components/DepartmentManagement";
 import ScheduleGenerator from "./components/ScheduleGenerator";
 import Department from "./components/Department";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MyTimetable from "./components/MyTimetable";
 import "./App.css";
 
 function App() {
@@ -90,6 +91,8 @@ function App() {
           return <ScheduleGenerator department={user.department} />;
         case "department":
           return <Department department={user.department} />;
+        case "my-schedule":
+          return <MyTimetable teacherId={user.teacherId} view="teacher" />;
         default:
           return renderDashboard();
       }
@@ -99,7 +102,7 @@ function App() {
     if (isFaculty()) {
       switch (activeView) {
         case "my-schedule":
-          return <Timetable teacherId={user.teacherId} view="teacher" />;
+          return <MyTimetable teacherId={user.teacherId} view="teacher" />;
         default:
           return renderDashboard();
       }
@@ -109,7 +112,7 @@ function App() {
     if (isStudent()) {
       switch (activeView) {
         case "my-timetable":
-          return <Timetable studentId={user.studentId} view="student" />;
+          return <MyTimetable studentId={user.studentId} view="student" />;
         default:
           return renderDashboard();
       }
