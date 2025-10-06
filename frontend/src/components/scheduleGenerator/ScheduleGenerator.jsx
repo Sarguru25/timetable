@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import api from "../services/api"; // Adjust path to your API service
-import "./ScheduleGenerator.css"; // Your CSS file
+import api from "../../services/api"; 
+import "./ScheduleGenerator.css"; 
 
 const ScheduleGenerator = () => {
   const [generating, setGenerating] = useState(false);

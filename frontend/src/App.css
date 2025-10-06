@@ -23,7 +23,6 @@ body {
   min-height: 100vh;
 }
 
-
 /* Main Content */
 .main-content {
   flex-grow: 1;
@@ -35,7 +34,6 @@ body {
   right: 0;
   bottom: o;
 }
-
 
 /* Responsive Design */
 @media (max-width: 768px) {

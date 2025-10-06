@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
-import "./Management.css";
+import { AuthContext } from "../../context/AuthContext.jsx";
+// import "./Management.css";
 
 const DepartmentManagement = () => {
   const { user, isAdmin } = useContext(AuthContext);

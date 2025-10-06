@@ -1,5 +1,5 @@
 import React from "react";
-import "../Dashboard.css";
+import "./Dashboard.css";
 
 const StudentDashboard = ({ setActiveView, user }) => {
   return (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Classes.css";
-import api from "../services/api";
+import api from "../../services/api";
 
 const Classes = () => {
   const [classes, setClasses] = useState([]);

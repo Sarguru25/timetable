@@ -1,5 +1,5 @@
 import React from "react";
-import "../Dashboard.css";
+import "./Dashboard.css";
 
 const HODDashboard = ({ setActiveView, user }) => {
   return (

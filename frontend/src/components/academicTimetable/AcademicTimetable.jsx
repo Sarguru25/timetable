@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./AcademicTimetable.css";
-import api from "../services/api";
+import api from "../../services/api";
 
 const AcademicTimetable = () => {
   const [timetableData, setTimetableData] = useState(null);

@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext.jsx";
+import { AuthContext } from "../../context/AuthContext";
 import "./UserManagement.css";
-import api from "../services/api";
+import api from "../../services/api";
 
 const UserManagement = () => {
   const { user, token } = useContext(AuthContext);
